@@ -1,13 +1,14 @@
-# mind_go
+## mind_go
 
 Mini CS GO in mindustry
 
-# req for maps
+## Requirements for maps
 
 _Map must have_
-- 1 sharded and 1 blue core
+- 1 sharded core and 1 blue core
 
-# server in list cant use this plugin
+## The servers in the list cant use this plugin
+
 - mindustry.ru
 - .io - all
 - ECAN
