@@ -10,31 +10,9 @@ public class Type {
     public static ObjectMap<Class, UnitType[]> map = new ObjectMap<>();
 
     public static void init() {
-        UnitType[] ground, legs, support;
-        ground = new UnitType[5];
-        ground[0] = UnitTypes.dagger;
-        ground[1] = UnitTypes.mace;
-        ground[2] = UnitTypes.fortress;
-        ground[3] = UnitTypes.scepter;
-        ground[4] = UnitTypes.reign;
-
-        legs = new UnitType[5];
-        legs[0] = UnitTypes.crawler;
-        legs[1] = UnitTypes.atrax;
-        legs[2] = UnitTypes.spiroct;
-        legs[3] = UnitTypes.arkyid;
-        legs[4] = UnitTypes.toxopid;
-
-        support = new UnitType[5];
-        support[0] = UnitTypes.nova;
-        support[1] = UnitTypes.pulsar;
-        support[2] = UnitTypes.quasar;
-        support[3] = UnitTypes.vela;
-        support[4] = UnitTypes.corvus;
-
-        map.put(Class.Main, ground);
-        map.put(Class.Spiders, legs);
-        map.put(Class.Support, support);
+        map.put(Class.Main, new UnitType[]{UnitTypes.dagger, UnitTypes.mace, UnitTypes.fortress, UnitTypes.scepter, UnitTypes.reign});
+        map.put(Class.Spiders, new UnitType[]{UnitTypes.crawler, UnitTypes.atrax, UnitTypes.spiroct, UnitTypes.arkyid, UnitTypes.toxopid});
+        map.put(Class.Support, new UnitType[]{UnitTypes.nova, UnitTypes.pulsar, UnitTypes.quasar, UnitTypes.vela, UnitTypes.corvus});
     }
 
     public static UnitType get(Class class1) {
