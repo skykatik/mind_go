@@ -14,7 +14,9 @@ public class Lobby {
     
     public static void init() {
         rooms = new Seq();
-        rooms.add(new Room(Class.Main, "MainType", 10, 10));
+        rooms.add(new Room(Class.Main, "[#dba463]MainType", 5, 18));
+        rooms.add(new Room(Class.Spiders, "[#bc4a9b]SpiderType", 18, 5));
+        rooms.add(new Room(Class.Support, "[#9cdb43]SupportType", 31, 18));
     }
     
     public static void update() {
@@ -22,10 +24,11 @@ public class Lobby {
             String text = "You are pick: [accent]Nothing";
             for (Room room : rooms) {
                 if (room.check(player)) /* Check Player In Room */ {
-                    text = "You are pick: " + room.name;
+                    text = "You are pick: [accent]"+ room.name;
                 }
             }
-            text += "\nTime to start: " + Main.timer;
+            // Show how much time to start
+            text += "\n[white]Time to start: [accent]" + (int) ((Main.gameTimer - Main.timer) / 60);
             Call.setHudText(text);
         }
     }
@@ -47,7 +50,7 @@ public class Lobby {
         
         // World Load Start
         Call.worldDataBegin();
-        Vars.world.loadMap(Vars.maps.byName("shop"));
+        Vars.world.loadMap(Vars.maps.byName("lobby"));
         // World Load End
         
         // Logic Reset End
@@ -72,6 +75,10 @@ public class Lobby {
             p.clearUnit();
         }
         
+        // Main Logic Stuff
+        
+        
+        
         // Logic Reset Start
         Vars.logic.reset();
         
@@ -93,16 +100,16 @@ public class Lobby {
         // Get Random Map
         Vars.world.loadMap(Vars.maps.getNextMap(Gamemode.survival, Vars.state.map), Vars.state.rules);
         // Try To Load Map Again If Map Name Equals Shop
-        if (Vars.state.map.name().equals("shop")) {
+        if (Vars.state.map.name().equals("lobby")) {
             // Haha Let's GO Start Again
             loadRandomMap();
         }
     }
     
-    public static void showShopText(Player player) {
+    public static void showShopText(Player player) /* Show Text for Joined Players */{
         Call.label(player.con, "", 99999, player.team().core().tileX(), player.team().core().tileY());
         
-        for (Room room : rooms) {
+        for (Room room : rooms) /* show text in centre room */ {
             Call.label(player.con, room.name, 99999, room.centreX, room.centreY);
         }
     }

@@ -1,10 +1,11 @@
 package mind_go;
 
+import mindustry.content.UnitTypes;
 import mindustry.gen.Player;
-import mindustry.gen.Unit;
+import mindustry.type.UnitType;
 
 public class PlayerData {
-    Unit unit;
+    UnitType unit = UnitTypes.dagger;
     Player player;
     
     public PlayerData(Player player) {
