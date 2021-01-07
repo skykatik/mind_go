@@ -19,10 +19,17 @@ import mindustry.gen.Player;
 public class Lobby {
     
     public static boolean inLobby = false;
+    public static Seq<Room> rooms = new Seq();
     
     public static void update() {
         for (Player player : Groups.player) {
-            Call.setHudText(player.con, "fuck");
+            String text = "You are pick: [accent]Nothing";
+            for (Room room : rooms) {
+                if (room.check(player)) /* Check Player In Room */ {
+                    text = "You are pick: " + room.name;
+                }
+            }
+            Call.setHudText(text);
         }
     }
     
