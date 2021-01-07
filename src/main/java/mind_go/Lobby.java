@@ -25,6 +25,7 @@ public class Lobby {
                     text = "You are pick: " + room.name;
                 }
             }
+            text += "\nTime to start: " + Main.timer;
             Call.setHudText(text);
         }
     }

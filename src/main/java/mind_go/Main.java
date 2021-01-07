@@ -8,7 +8,7 @@ import mindustry.mod.Plugin;
 
 public class Main extends Plugin {
 
-    int afterLoadTimer = 100,
+    public static int afterLoadTimer = 100,
             timer = 0,
             lobbyTimer = 60 * 60 / 2,
             gameTimer = 60 * 60 * 5;
@@ -17,8 +17,11 @@ public class Main extends Plugin {
 
     @Override
     public void init() {
+        // Some Stuff Init
         super.init();
-
+        Lobby.init();
+        Type.init();
+        
         // Update Trigger
         Events.on(EventType.Trigger.update.getClass(), event -> {
             // Timer oh no
@@ -64,7 +67,7 @@ public class Main extends Plugin {
 
         // Server Load
         Events.on(EventType.ServerLoadEvent.class, event -> {
-
+            
         });
     }
 

@@ -13,9 +13,10 @@ public class Room {
         this.classa = class1;
         this.x = x * Vars.tilesize;
         this.y = y * Vars.tilesize;
-        this.centreX = (endX - x);
         this.endX = endX * Vars.tilesize;
         this.endY = endY * Vars.tilesize;
+        this.centreX = x + (endX - x) / 2;
+        this.centreY = y + (endY - y) / 2;
     }
     
     public Room(Class class1, String name, int x, int y, int roomSize) {
