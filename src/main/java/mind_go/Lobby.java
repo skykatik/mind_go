@@ -117,15 +117,21 @@ public class Lobby {
         }
     }
 
-    public static Map loadRandomMap() {
+    public static Map loadRandomMap(Map oldMap) {
+        int i = 0;
         // Get Random Map
         Map map = Vars.maps.getNextMap(Gamemode.survival, Vars.state.map);
         // Try To Load Map Again If Map Name Equals Shop
         if (map != null && map.name().equals("lobby")) {
             // Haha Let's GO Start Again
-            loadRandomMap();
+            loadRandomMap(map);
+            System.out.println(i);
         } 
         return map;
+    }
+    
+    public static Map loadRandomMap() {
+       return loadRandomMap(Vars.state.map);
     }
 
     public static void showShopText(Player player) {
