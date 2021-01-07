@@ -1,16 +1,12 @@
 package mind_go;
 
 import arc.Events;
-import arc.struct.Seq;
 import arc.util.CommandHandler;
-import arc.util.Nullable;
 import java.util.HashMap;
 import mindustry.Vars;
 import mindustry.content.Blocks;
-import mindustry.core.NetClient;
 import mindustry.game.EventType;
 import mindustry.game.Team;
-import mindustry.gen.Building;
 import mindustry.gen.Call;
 import mindustry.gen.Groups;
 import mindustry.gen.Player;
@@ -23,14 +19,15 @@ import mindustry.world.blocks.storage.CoreBlock;
 
 public class Main extends Plugin {
 
-    public static int afterLoadTimer = 100,
+    public static int afterLoadTimer = 150,
             timer = 0,
             lobbyTimer = 60 * 60 / 4,
             gameTimer = 60 * 60 / 4;
     public static HashMap<Player, PlayerData> data = new HashMap<>();
-    boolean debug = true,
+    boolean debug = false,
             loaded = false,
             worldLoaded = false;
+    public static int shardedPlayers = 0, bluePlayers = 0;
 
     @Override
     public void init() {
@@ -59,16 +56,16 @@ public class Main extends Plugin {
                 afterLoadTimer--;
                 if (afterLoadTimer <= 0) {
                     if (Lobby.inLobby) /* Lobby Once */ {
-                        Groups.player.each(player -> {
+                        Groups.player.each(player -> /* Show Text To Player */ {
                             Lobby.showShopText(player);
                         });
-                        if (debug) /* Debug Stuff */{
+                        if (debug) /* Debug Stuff */ {
                             debug();
                         }
                     } else /* Game Once */ {
                         initGame();
                     }
-                    afterLoadTimer = 100;
+                    afterLoadTimer = 150;
                     loaded = false;
                 }
             }
@@ -82,13 +79,23 @@ public class Main extends Plugin {
                         timer = 0;
                     }
                 } else /* Game Logic */ {
-                    if (timer > gameTimer) /* Go to Lobby when Timer out*/ {
+                    if (timer > gameTimer && !GameLogic.gameOver) /* Go to Lobby when Timer out*/ {
                         Lobby.go();
                         timer = 0;
                     }
-                    for (Player player : Groups.player) {
-                        Call.setHudText(player.con, "Game end in: " + (int) ((gameTimer - timer) / 60));
+
+                    shardedPlayers = 0;
+                    bluePlayers = 0;
+                    for (Player player : Groups.player) /* Set Hud To Players */ {
+                        int health = (int) (100 - ((player.unit().maxHealth - player.unit().health) / (player.unit().maxHealth / 100)));
+                        Call.setHudText(player.con, "Game end in: " + (int) ((gameTimer - timer) / 60) + "\nYour Health is: [red]" + health + "%");
+                        if (player.team() == Team.blue) {
+                            bluePlayers++;
+                        } else if (player.team() == Team.sharded) {
+                            shardedPlayers++;
+                        }
                     }
+                    GameLogic.update();
                 }
             }
         });
@@ -106,7 +113,7 @@ public class Main extends Plugin {
         Events.on(EventType.PlayerJoin.class, event -> {
             // Add PlayerData To The Server
             data.put(event.player, new PlayerData(event.player));
-            
+
             if (Lobby.inLobby) /* show text */ {
                 Lobby.showShopText(event.player);
             }
@@ -116,7 +123,7 @@ public class Main extends Plugin {
         Events.on(EventType.PlayerLeave.class, event -> {
             data.remove(event.player);
         });
-        
+
         // Server Load
         Events.on(EventType.ServerLoadEvent.class, event -> {
         });
@@ -134,6 +141,16 @@ public class Main extends Plugin {
             Lobby.go();
             System.out.println("Let's go");
         });
+        
+        handler.register("info", "get some information from stats", args -> {
+            System.out.println("Current Map: " + Vars.state.map.name()
+                    + "\nCurrent Tier: " + Type.tier
+                    + "\nPlayerData's: " + data.size()
+                    + "\nRooms In Lobby: " + Lobby.rooms.size
+                    + "\nUnits: " + Groups.unit.size()
+                    + "\nIn Lobby: " + Lobby.inLobby
+            );
+        });
     }
 
     @Override
@@ -142,11 +159,17 @@ public class Main extends Plugin {
     }
 
     public void initGame() {
+        float sx = 0, sy = 0, bx = 0, by = 0;
+        
         for (CoreBlock.CoreBuild core : Team.blue.cores()) /* destroy blue cores */ {
+            bx = core.x;
+            by = core.y;
             core.kill();
         }
 
         for (CoreBlock.CoreBuild core : Team.sharded.cores()) /* destory sharded cores */ {
+            sx = core.x;
+            sy = core.y;
             core.kill();
         }
 
@@ -155,6 +178,7 @@ public class Main extends Plugin {
                 tile.setNet(Blocks.thoriumWall, Team.get(947), 0); // My love Number :Ç
             }
         }
+        GameLogic.start(sx, sy, bx, by);
     }
 
     public void clearOre() {
@@ -166,7 +190,7 @@ public class Main extends Plugin {
     }
 
     public void debug() {
-        for (Room room : Lobby.rooms) {
+        for (Room room : Lobby.rooms) /* Draw Debug Square With Bullets */{
             room.debugDraw();
         }
     }
