@@ -19,7 +19,12 @@ import mindustry.gen.Player;
 public class Lobby {
     
     public static boolean inLobby = false;
-    public static Seq<Room> rooms = new Seq();
+    public static Seq<Room> rooms;
+    
+    public static void init() {
+        rooms = new Seq();
+        rooms.add(new Room(Class.Main, "MainType", 10, 10));
+    }
     
     public static void update() {
         for (Player player : Groups.player) {
@@ -99,6 +104,14 @@ public class Lobby {
         if (Vars.state.map.name().equals("shop")) {
             // Haha Let's GO Start Again
             loadRandomMap();
+        }
+    }
+    
+    public static void showShopText(Player player) {
+        Call.label(player.con, "", 99999, player.team().core().tileX(), player.team().core().tileY());
+        
+        for (Room room : rooms) {
+            Call.label(player.con, room.name, 99999, room.centreX, room.centreY);
         }
     }
 }
