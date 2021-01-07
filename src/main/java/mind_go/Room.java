@@ -1,20 +1,11 @@
-/*
- * To change this license header, choose License Headers in Project Properties.
- * To change this template file, choose Tools | Templates
- * and open the template in the editor.
- */
 package mind_go;
 
 import mindustry.Vars;
 import mindustry.gen.Player;
 
-/**
- *
- * @author Xusk
- */
 public class Room {
     public final static int ROOM_SIZE = 10;
-    float x, y, endX, endY;
+    float x, y, endX, endY, centreX, centreY;
     Class classa = Class.Main;
     String name = "null";
     
@@ -22,6 +13,7 @@ public class Room {
         this.classa = class1;
         this.x = x * Vars.tilesize;
         this.y = y * Vars.tilesize;
+        this.centreX = (endX - x);
         this.endX = endX * Vars.tilesize;
         this.endY = endY * Vars.tilesize;
     }

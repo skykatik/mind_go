@@ -1,69 +1,43 @@
-/*
- * To change this license header, choose License Headers in Project Properties.
- * To change this template file, choose Tools | Templates
- * and open the template in the editor.
- */
 package mind_go;
 
+import arc.struct.ObjectMap;
 import mindustry.content.UnitTypes;
 import mindustry.type.UnitType;
 
-/**
- *
- * @author Xusk
- */
 public class Type {
+
     public static int tier = 1;
-    
+    public static ObjectMap<Class, UnitType[]> map = new ObjectMap<>();
+
+    public static void init() {
+        UnitType[] ground, legs, support;
+        ground = new UnitType[5];
+        ground[0] = UnitTypes.dagger;
+        ground[1] = UnitTypes.mace;
+        ground[2] = UnitTypes.fortress;
+        ground[3] = UnitTypes.scepter;
+        ground[4] = UnitTypes.reign;
+
+        legs = new UnitType[5];
+        legs[0] = UnitTypes.crawler;
+        legs[1] = UnitTypes.atrax;
+        legs[2] = UnitTypes.spiroct;
+        legs[3] = UnitTypes.arkyid;
+        legs[4] = UnitTypes.toxopid;
+
+        support = new UnitType[5];
+        support[0] = UnitTypes.nova;
+        support[1] = UnitTypes.pulsar;
+        support[2] = UnitTypes.quasar;
+        support[3] = UnitTypes.vela;
+        support[4] = UnitTypes.corvus;
+
+        map.put(Class.Main, ground);
+        map.put(Class.Spiders, legs);
+        map.put(Class.Support, support);
+    }
+
     public static UnitType get(Class class1) {
-        switch (class1) {
-            case Main: /* Region Ground Attack */
-                switch (tier) {
-                    case 1:
-                        return UnitTypes.dagger;
-                    case 2:
-                        return UnitTypes.mace;
-                    case 3:
-                        return UnitTypes.fortress;
-                    case 4:
-                        return UnitTypes.scepter;
-                    case 5:
-                        return UnitTypes.reign;
-                    default: 
-                        return UnitTypes.dagger;
-                }
-            case Support: /* Ground Support */
-                switch (tier) {
-                    case 1:
-                        return UnitTypes.nova;
-                    case 2:
-                        return UnitTypes.pulsar;
-                    case 3:
-                        return UnitTypes.quasar;
-                    case 4:
-                        return UnitTypes.vela;
-                    case 5:
-                        return UnitTypes.corvus;
-                    default: 
-                        return UnitTypes.nova;
-                }
-            case Spiders: /* Ground Legs */
-                switch (tier) {
-                    case 1:
-                        return UnitTypes.crawler;
-                    case 2:
-                        return UnitTypes.atrax;
-                    case 3:
-                        return UnitTypes.spiroct;
-                    case 4:
-                        return UnitTypes.arkyid;
-                    case 5:
-                        return UnitTypes.toxopid;
-                    default:
-                        return UnitTypes.crawler;
-                }
-            default:
-                return UnitTypes.dagger;
-        }
+        return map.get(class1)[tier];
     }
 }

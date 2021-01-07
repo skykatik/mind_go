@@ -1,19 +1,11 @@
-/*
- * To change this license header, choose License Headers in Project Properties.
- * To change this template file, choose Tools | Templates
- * and open the template in the editor.
- */
 package mind_go;
 
 import arc.Events;
 import arc.util.CommandHandler;
 import mindustry.game.EventType;
+import mindustry.gen.Groups;
 import mindustry.mod.Plugin;
 
-/**
- *
- * @author Xusk
- */
 public class Main extends Plugin {
 
     int afterLoadTimer = 100,
@@ -22,6 +14,7 @@ public class Main extends Plugin {
             gameTimer = 60 * 60 * 5;
     boolean loaded = false,
             worldLoaded = false;
+
     @Override
     public void init() {
         super.init();
@@ -29,11 +22,18 @@ public class Main extends Plugin {
         // Update Trigger
         Events.on(EventType.Trigger.update.getClass(), event -> {
             // Timer oh no
-            timer ++;
+            timer++;
             // Once after load event, when player join they are have a "connection state", and have chance 50% for not show a Call.label 
             if (loaded) {
                 afterLoadTimer--;
                 if (afterLoadTimer <= 0) {
+                    if (Lobby.inLobby) /* Lobby Once */ {
+                        Groups.player.each(player -> {
+                            Lobby.showShopText(player);
+                        });
+                    } else /* Game Once */ {
+                        
+                    }
                     afterLoadTimer = 100;
                     loaded = false;
                 }
