@@ -5,17 +5,12 @@
  */
 package mind_go;
 
-import arc.math.Mathf;
 import arc.struct.Seq;
 import mindustry.Vars;
-import mindustry.content.UnitTypes;
 import mindustry.game.Gamemode;
-import mindustry.game.Team;
 import mindustry.gen.Call;
 import mindustry.gen.Groups;
 import mindustry.gen.Player;
-import mindustry.gen.Unit;
-import mindustry.maps.Map;
 
 /**
  *
@@ -24,6 +19,12 @@ import mindustry.maps.Map;
 public class Lobby {
     
     public static boolean inLobby = false;
+    
+    public static void update() {
+        for (Player player : Groups.player) {
+            Call.setHudText(player.con, "fuck");
+        }
+    }
     
     public static void go() {
         // Set LobbyState to in Lobby

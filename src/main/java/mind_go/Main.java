@@ -5,6 +5,9 @@
  */
 package mind_go;
 
+import arc.Events;
+import arc.util.CommandHandler;
+import mindustry.game.EventType;
 import mindustry.mod.Plugin;
 /**
  *
@@ -16,6 +19,37 @@ public class Main extends Plugin {
     public void init() {
         super.init();
         
+        // Update Trigger
+        Events.on(EventType.Trigger.update.getClass(), event -> {
+        
+        });
+        
+        // World Load
+        Events.on(EventType.WorldLoadEvent.class, event -> {
+            
+        });
+        
+        // Server Load
+        Events.on(EventType.ServerLoadEvent.class, event -> {
+            
+        });
     }
+
+    // TODO: do sothing with that lol
+    @Override
+    public void registerClientCommands(CommandHandler handler) {
+        
+    }
+
+    @Override
+    public void registerServerCommands(CommandHandler handler) {
+        
+    }
+
+    @Override
+    public void loadContent() {
+        
+    }
+    
     
 }

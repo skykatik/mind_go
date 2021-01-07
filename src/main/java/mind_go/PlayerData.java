@@ -5,16 +5,15 @@
  */
 package mind_go;
 
-import mindustry.content.UnitTypes;
-import mindustry.game.Team;
 import mindustry.gen.Player;
-import mindustry.type.UnitType;
+import mindustry.gen.Unit;
 
 /**
  *
  * @author Xusk
  */
 public class PlayerData {
+    Unit unit;
     Player player;
     
     public PlayerData(Player player) {
