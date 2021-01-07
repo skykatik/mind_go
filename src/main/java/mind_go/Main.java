@@ -1,11 +1,15 @@
 package mind_go;
 
 import arc.Events;
+import arc.math.Mathf;
 import arc.util.CommandHandler;
+import arc.util.Log;
 import java.util.HashMap;
 import mindustry.Vars;
 import mindustry.content.Blocks;
+import mindustry.core.GameState;
 import mindustry.game.EventType;
+import mindustry.game.Rules;
 import mindustry.game.Team;
 import mindustry.gen.Call;
 import mindustry.gen.Groups;
@@ -17,18 +21,26 @@ import mindustry.world.blocks.environment.Floor;
 import mindustry.world.blocks.environment.OreBlock;
 import mindustry.world.blocks.storage.CoreBlock;
 
+import static mindustry.Vars.logic;
+import static mindustry.Vars.state;
+
 public class Main extends Plugin {
 
     public static int afterLoadTimer = 150,
             timer = 0,
-            lobbyTimer = 60 * 60 / 4,
-            gameTimer = 60 * 60 / 4;
+            lobbyTimer = 60 * 60 / 2,
+            gameTimer = 60 * 60 * 5;
+    
     public static HashMap<Player, PlayerData> data = new HashMap<>();
+    
     boolean debug = false,
             loaded = false,
             worldLoaded = false;
+    
     public static int shardedPlayers = 0, bluePlayers = 0;
-
+    
+    public static Rules rules = new Rules();
+    
     @Override
     public void init() {
         // Some Stuff Init
@@ -38,10 +50,13 @@ public class Main extends Plugin {
 
         // Rules Stuff Here
         for (Block block : Vars.content.blocks()) {
-            Vars.state.rules.bannedBlocks.add(block);
+            rules.bannedBlocks.add(block);
         }
-
-        Vars.state.rules.canGameOver = false;
+        rules.waves = true;
+        rules.waveTimer = false;
+        rules.blockDamageMultiplier = 0.1f;
+        rules.blockHealthMultiplier = 4f;
+        rules.canGameOver = false;
 
         // Rules Stuff Initialize
         Call.setRules(Vars.state.rules);
@@ -57,8 +72,9 @@ public class Main extends Plugin {
                 if (afterLoadTimer <= 0) {
                     if (Lobby.inLobby) /* Lobby Once */ {
                         Groups.player.each(player -> /* Show Text To Player */ {
-                            Lobby.showShopText(player);
-                        });
+                                    Lobby.showShopText(player);
+                                    Lobby.spawnUnits();
+                                });
                         if (debug) /* Debug Stuff */ {
                             debug();
                         }
@@ -126,6 +142,9 @@ public class Main extends Plugin {
 
         // Server Load
         Events.on(EventType.ServerLoadEvent.class, event -> {
+            Lobby.go();
+            Vars.netServer.openServer();
+            System.out.println("SERVER IN PLUGIN CONTROL UHAHAHA\nServer Started not write /HOST");
         });
     }
 
@@ -138,10 +157,20 @@ public class Main extends Plugin {
     @Override
     public void registerServerCommands(CommandHandler handler) {
         handler.register("start", "START THIS FUCKING GAME AAAAAAA", args -> {
+            if(!state.is(GameState.State.menu)) {
+                Log.err("SHUT UP THE SERVER UHHHHHHH");
+                return;
+            }
+            
+            logic.reset();
+            state.rules = rules.copy();
+            logic.play();
+            Vars.netServer.openServer();
+            
             Lobby.go();
             System.out.println("Let's go");
         });
-        
+
         handler.register("info", "get some information from stats", args -> {
             System.out.println("Current Map: " + Vars.state.map.name()
                     + "\nCurrent Tier: " + Type.tier
@@ -149,6 +178,7 @@ public class Main extends Plugin {
                     + "\nRooms In Lobby: " + Lobby.rooms.size
                     + "\nUnits: " + Groups.unit.size()
                     + "\nIn Lobby: " + Lobby.inLobby
+                    + "\nNext Map: " + Lobby.nextMap.name()
             );
         });
     }
@@ -160,7 +190,7 @@ public class Main extends Plugin {
 
     public void initGame() {
         float sx = 0, sy = 0, bx = 0, by = 0;
-        
+
         for (CoreBlock.CoreBuild core : Team.blue.cores()) /* destroy blue cores */ {
             bx = core.x;
             by = core.y;
@@ -175,7 +205,7 @@ public class Main extends Plugin {
 
         for (Tile tile : Vars.world.tiles) /* place walls on floor */ {
             if (tile.floor() == (Floor) Blocks.metalFloor5) {
-                tile.setNet(Blocks.thoriumWall, Team.get(947), 0); // My love Number :Ç
+                tile.setNet(Mathf.random(0,100) > 50 ? Blocks.thoriumWall : Blocks.plastaniumWall, Team.get(947), 0); // My love Number :Ç
             }
         }
         GameLogic.start(sx, sy, bx, by);
@@ -190,7 +220,7 @@ public class Main extends Plugin {
     }
 
     public void debug() {
-        for (Room room : Lobby.rooms) /* Draw Debug Square With Bullets */{
+        for (Room room : Lobby.rooms) /* Draw Debug Square With Bullets */ {
             room.debugDraw();
         }
     }

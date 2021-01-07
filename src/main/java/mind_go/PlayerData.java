@@ -1,8 +1,6 @@
 package mind_go;
 
-import mindustry.content.UnitTypes;
 import mindustry.gen.Player;
-import mindustry.type.UnitType;
 
 public class PlayerData {
 
