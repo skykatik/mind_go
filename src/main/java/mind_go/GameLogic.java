@@ -31,7 +31,7 @@ public class GameLogic {
                 gameOver(winnerTeam);
                 once = false;
             }
-            
+
             if (timer > gameOverTimer) {
                 timer = 0;
                 gameOver = false;
@@ -40,15 +40,17 @@ public class GameLogic {
         } else {
             once = true;
         }
-        if (Main.shardedPlayers < 1) {
-            gameOver = true;
-            winnerTeam = Team.blue;
-        } else if (Main.bluePlayers < 1) {
-            gameOver = true;
-            winnerTeam = Team.sharded;
+        if (Groups.player.size() > 1) {
+            if (Main.shardedPlayers < 1) {
+                gameOver = true;
+                winnerTeam = Team.blue;
+            } else if (Main.bluePlayers < 1) {
+                gameOver = true;
+                winnerTeam = Team.sharded;
+            }
         }
     }
-    
+
     public static void gameOver(Team team) {
         String text = "Winner Team is: ";
         if (team == Team.sharded) {
@@ -60,7 +62,7 @@ public class GameLogic {
         }
         Call.infoMessage(text);
     }
-    
+
     public static void start(float sx, float sy, float bx, float by) /* sharded, blue */ {
         for (Player player : Groups.player) {
             // Get Data From Hash Map
@@ -76,6 +78,7 @@ public class GameLogic {
             // Add Unit
             unit.add();
             // Set Unit To The Player
+            data.unita = unit;
             player.team(team);
             player.unit(unit);
         }

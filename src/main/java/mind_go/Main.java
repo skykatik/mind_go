@@ -30,17 +30,18 @@ public class Main extends Plugin {
             timer = 0,
             lobbyTimer = 60 * 60 / 2,
             gameTimer = 60 * 60 * 5;
-    
+
     public static HashMap<Player, PlayerData> data = new HashMap<>();
-    
+
     boolean debug = false,
             loaded = false,
+            timerSeted = false,
             worldLoaded = false;
-    
+
     public static int shardedPlayers = 0, bluePlayers = 0;
-    
+
     public static Rules rules = new Rules();
-    
+
     @Override
     public void init() {
         // Some Stuff Init
@@ -73,8 +74,8 @@ public class Main extends Plugin {
                     if (Lobby.inLobby) /* Lobby Once */ {
                         Groups.player.each(player -> /* Show Text To Player */ {
                                     Lobby.showShopText(player);
-                                    Lobby.spawnUnits();
                                 });
+                        Lobby.spawnUnits();
                         if (debug) /* Debug Stuff */ {
                             debug();
                         }
@@ -83,6 +84,7 @@ public class Main extends Plugin {
                     }
                     afterLoadTimer = 150;
                     loaded = false;
+                    timerSeted = true;
                 }
             }
 
@@ -105,13 +107,27 @@ public class Main extends Plugin {
                     for (Player player : Groups.player) /* Set Hud To Players */ {
                         int health = (int) (100 - ((player.unit().maxHealth - player.unit().health) / (player.unit().maxHealth / 100)));
                         Call.setHudText(player.con, "Game end in: " + (int) ((gameTimer - timer) / 60) + "\nYour Health is: [red]" + health + "%");
-                        if (player.team() == Team.blue) {
-                            bluePlayers++;
-                        } else if (player.team() == Team.sharded) {
-                            shardedPlayers++;
+                        if(player.unit().health <= 0) {
+                            if (player.team() == Team.blue) {
+                                bluePlayers++;
+                            } else if (player.team() == Team.sharded) {
+                                shardedPlayers++;
+                            }
                         }
                     }
-                    GameLogic.update();
+                    if (timerSeted) {
+                        GameLogic.update();
+                        
+                        Groups.player.each(player -> {
+                            PlayerData date = data.get(player);
+                            if (date.unita != null && date.unita.dead == true) {
+                                date.unita = null;
+                            }
+                            if (date.unita != null && !date.unita.isPlayer()) {
+                                player.unit(date.unita);
+                            }
+                        });
+                    }
                 }
             }
         });
@@ -121,6 +137,7 @@ public class Main extends Plugin {
             clearOre();
 
             // SetDefaultVariable
+            timerSeted = false;
             loaded = true;
             worldLoaded = true;
         });
@@ -157,16 +174,16 @@ public class Main extends Plugin {
     @Override
     public void registerServerCommands(CommandHandler handler) {
         handler.register("start", "START THIS FUCKING GAME AAAAAAA", args -> {
-            if(!state.is(GameState.State.menu)) {
+            if (!state.is(GameState.State.menu)) {
                 Log.err("SHUT UP THE SERVER UHHHHHHH");
                 return;
             }
-            
+
             logic.reset();
             state.rules = rules.copy();
             logic.play();
             Vars.netServer.openServer();
-            
+
             Lobby.go();
             System.out.println("Let's go");
         });
@@ -205,7 +222,7 @@ public class Main extends Plugin {
 
         for (Tile tile : Vars.world.tiles) /* place walls on floor */ {
             if (tile.floor() == (Floor) Blocks.metalFloor5) {
-                tile.setNet(Mathf.random(0,100) > 50 ? Blocks.thoriumWall : Blocks.plastaniumWall, Team.get(947), 0); // My love Number :Ç
+                tile.setNet(Mathf.random(0, 100) > 50 ? Blocks.thoriumWall : Blocks.plastaniumWall, Team.get(947), 0); // My love Number :Ç
             }
         }
         GameLogic.start(sx, sy, bx, by);

@@ -27,16 +27,16 @@ public class Lobby {
 
     public static void update() {
         for (Player player : Groups.player) {
-            String text = "You are pick: [accent]Nothing";
+            String text = "You pick: [accent]Nothing";
             for (Room room : rooms) {
                 if (room.check(player)) /* Check Player In Room */ {
-                    text = "You are pick: [accent]" + room.name;
+                    text = "You pick: [accent]" + room.name;
                     Main.data.get(player).unit = room.classa;
                 }
             }
             // Show how much time to start
             text += "\n[white]Time to start: [accent]" + (int) ((Main.lobbyTimer - Main.timer) / 60);
-            Call.setHudText(text);
+            Call.setHudText(player.con(), text);
         }
         
         for (Room room : rooms) {
@@ -47,12 +47,16 @@ public class Lobby {
     public static void go() {
         // Set LobbyState to in Lobby
         Lobby.inLobby = true;
-
+        
+        // Update GameTier
+        Type.tier = Mathf.random(0, 4);
+        
         // Add Players In 'players' Seq
         Seq<Player> players = new Seq<>();
 
         for (Player p : Groups.player) {
             players.add(p);
+            Main.data.get(p).unita = null;
             p.team(Team.sharded);
             p.clearUnit();
         }
@@ -81,9 +85,6 @@ public class Lobby {
     public static void out() {
         // Set Lobby State
         Lobby.inLobby = false;
-        
-        // Update GameTier
-        Type.tier = Mathf.random(0, 4);
         
         // Write Players Array
         Seq<Player> players = new Seq<>();
@@ -136,7 +137,7 @@ public class Lobby {
     public static void showShopText(Player player) {
         float centreX = Vars.world.width() / 2 * Vars.tilesize;
         float centreY = Vars.world.height() / 2 * Vars.tilesize;
-        Call.label("[white]Next Map is: [accent]" + nextMap.name() + "\n[white]Author is: [accent]" + nextMap.author(), 99999, centreX, centreY);
+        Call.label(player.con, "[white]Next Map is: [accent]" + nextMap.name() + "\n[white]Author is: [accent]" + nextMap.author(), 99999, centreX, centreY);
         for (Room room : rooms) /* show text in centre room */ {
             Call.label(player.con, room.name, 99999, room.centreX, room.centreY);
         }
