@@ -20,9 +20,9 @@ public class Lobby {
     public static void init() {
         nextMap = loadRandomMap();
         rooms = new Seq();
-        rooms.add(new Room(Class.Main, "|[#dba463]Basic|Type|", 5, 18));
-        rooms.add(new Room(Class.Spiders, "|[#bc4a9b]Spider|Type|", 18, 5));
-        rooms.add(new Room(Class.Support, "|[#9cdb43]Support|Type|", 31, 18));
+        rooms.add(new Room(Class.Main, "[#dba463]|Basic|Type|", 5, 18));
+        rooms.add(new Room(Class.Spiders, "[#bc4a9b]|Spider|Type|", 18, 5));
+        rooms.add(new Room(Class.Support, "[#9cdb43]|Support|Type|", 31, 18));
     }
 
     public static void update() {
@@ -118,14 +118,13 @@ public class Lobby {
     }
 
     public static Map loadRandomMap(Map oldMap) {
-        int i = 0;
         // Get Random Map
         Map map = Vars.maps.getNextMap(Gamemode.survival, Vars.state.map);
         // Try To Load Map Again If Map Name Equals Shop
         if (map != null && map.name().equals("lobby")) {
             // Haha Let's GO Start Again
-            loadRandomMap(map);
-            System.out.println(i);
+            System.out.println("FUCK LOBBY");
+            return loadRandomMap(map);
         } 
         return map;
     }
