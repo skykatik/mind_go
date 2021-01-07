@@ -23,6 +23,7 @@ public class Lobby {
         rooms.add(new Room(Class.Main, "[#dba463]|Basic|Type|", 5, 18));
         rooms.add(new Room(Class.Spiders, "[#bc4a9b]|Spider|Type|", 18, 5));
         rooms.add(new Room(Class.Support, "[#9cdb43]|Support|Type|", 31, 18));
+        //rooms.add(new Room(Class.Aire, "[white]|Air|Type|"))
     }
 
     public static void update() {

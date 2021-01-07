@@ -33,12 +33,10 @@ public class Main extends Plugin {
 
     public static HashMap<Player, PlayerData> data = new HashMap<>();
 
-    boolean debug = false,
+    public static boolean debug = false,
             loaded = false,
             timerSeted = false,
             worldLoaded = false;
-
-    public static int shardedPlayers = 0, bluePlayers = 0;
 
     public static Rules rules = new Rules();
 
@@ -102,18 +100,9 @@ public class Main extends Plugin {
                         timer = 0;
                     }
 
-                    shardedPlayers = 0;
-                    bluePlayers = 0;
                     for (Player player : Groups.player) /* Set Hud To Players */ {
                         int health = (int) (100 - ((player.unit().maxHealth - player.unit().health) / (player.unit().maxHealth / 100)));
                         Call.setHudText(player.con, "Game end in: " + (int) ((gameTimer - timer) / 60) + "\nYour Health is: [red]" + health + "%");
-                        if(player.unit().health <= 0) {
-                            if (player.team() == Team.blue) {
-                                bluePlayers++;
-                            } else if (player.team() == Team.sharded) {
-                                shardedPlayers++;
-                            }
-                        }
                     }
                     if (timerSeted) {
                         GameLogic.update();
@@ -197,6 +186,10 @@ public class Main extends Plugin {
                     + "\nIn Lobby: " + Lobby.inLobby
                     + "\nNext Map: " + Lobby.nextMap.name()
             );
+        });
+        
+        handler.register("debug", "fuck me", args -> {
+            debug = !debug;
         });
     }
 

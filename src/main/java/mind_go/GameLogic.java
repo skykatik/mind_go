@@ -32,7 +32,7 @@ public class GameLogic {
                 once = false;
             }
 
-            if (timer > gameOverTimer) {
+            if (timer > gameOverTimer && !Lobby.inLobby) {
                 timer = 0;
                 gameOver = false;
                 Lobby.go();
@@ -40,14 +40,27 @@ public class GameLogic {
         } else {
             once = true;
         }
-        if (Groups.player.size() > 1) {
-            if (Main.shardedPlayers < 1) {
-                gameOver = true;
-                winnerTeam = Team.blue;
-            } else if (Main.bluePlayers < 1) {
-                gameOver = true;
-                winnerTeam = Team.sharded;
+        int shardedPlayers = 0,
+                bluePlayers = 0;
+
+        for (Unit unit : Groups.unit) {
+            if (unit.health >= 0) {
+                if (unit.team() == Team.sharded) {
+                    shardedPlayers++;
+                } else if (unit.team() == Team.blue) {
+                    bluePlayers++;
+                }
             }
+            if (Main.debug) {
+                System.out.println(bluePlayers + " : " + shardedPlayers);
+            }
+        }
+        if (shardedPlayers <= 0) {
+            gameOver = true;
+            winnerTeam = Team.blue;
+        } else if (bluePlayers <= 0) {
+            gameOver = true;
+            winnerTeam = Team.sharded;
         }
     }
 
