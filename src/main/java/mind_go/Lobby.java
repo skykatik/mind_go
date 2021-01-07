@@ -123,7 +123,7 @@ public class Lobby {
         // Try To Load Map Again If Map Name Equals Shop
         if (map != null && map.name().equals("lobby")) {
             // Haha Let's GO Start Again
-            System.out.println("FUCK LOBBY");
+            //System.out.println("FUCK LOBBY");
             return loadRandomMap(map);
         } 
         return map;
