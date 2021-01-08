@@ -144,7 +144,7 @@ public class Lobby {
         float centreY = Vars.world.height() / 2 * Vars.tilesize;
         Call.label(player.con, "[white]Next Map is: [accent]" + nextMap.name() + "\n[white]Author is: [accent]" + nextMap.author(), 99999, centreX, centreY);
         for (Room room : rooms) /* show text in centre room */ {
-            String text = room.active ? "" : "\n[red]Disabled [white]: on this map";
+            String text = room.active ? "" : "\n[red]Disabled [white]: on this map"; // that only for WaterRooms xd
             Call.label(player.con, room.name + text, 99999, room.centreX, room.centreY);
         }
     }
@@ -152,12 +152,15 @@ public class Lobby {
     public static void spawnUnits() {
         for (Room room : rooms) {
             Unit unit = Type.get(room.classa).create(Team.sharded);
+            
+            //Water Units Only
             if (unit instanceof  WaterMovec && nextMap.tags.get("hasLiquid").equals("true")) {
                 room.active = true;
             } else if (unit instanceof  WaterMovec) {
                 room.active = false;
                 continue;
             }
+            
             unit.set(room.centreX, room.centreY);
             unit.add();
             room.unit = unit;

@@ -53,6 +53,7 @@ public class GameLogic {
                     bluePlayers++;
                 }
             }
+            // Damage Flying Units, PAY FOR THIS WITH YOUR BLOOD UHAHAHA
             if (unit.isFlying()) {
                 unit.damagePierce(unit.maxHealth / 1000 / 1.5f);
             }

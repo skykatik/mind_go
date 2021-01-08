@@ -233,6 +233,7 @@ public class Main extends Plugin {
             if (tile.floor() == (Floor) Blocks.metalFloor5) {
                 tile.setNet(Mathf.random(0, 100) > 50 ? Blocks.thoriumWall : Blocks.plastaniumWall, Team.get(947), 0); // My love Number :Ç
             }
+            // Set map to water if map has a water
             if (tile.floor().isLiquid) {
                 Vars.state.map.tags.put("hasLiquid", "true");
             }
