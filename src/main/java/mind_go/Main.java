@@ -272,7 +272,7 @@ public class Main extends Plugin {
 
         for (Tile tile : Vars.world.tiles) /* place walls on floor */ {
             if (tile.floor() == (Floor) Blocks.metalFloor5) {
-                tile.setNet(Mathf.random(0, 100) > 80 ? Mathf.random(0,100) > 80 ? Blocks.thoriumWall : Blocks.surgeWall : Blocks.plastaniumWall, Team.get(947), 0); // My love Number :Ç
+                tile.setNet(Mathf.random(0, 100) > 30 ? Mathf.random(0,100) > 30 ? Blocks.thoriumWall : Blocks.surgeWall : Blocks.plastaniumWall, Team.get(947), 0); // My love Number :Ç
             }
             if (mines) {
                 if (tile.block() == Blocks.air && Mathf.random(100) > 98) {
