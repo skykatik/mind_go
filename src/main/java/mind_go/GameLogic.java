@@ -58,7 +58,7 @@ public class GameLogic {
                     }
                     if (team != lastTeam) {
                         end = false;
-                    };
+                    }
                     lastTeam = unit.team;
                 }
 
@@ -66,6 +66,9 @@ public class GameLogic {
                     winnerTeam = lastTeam;
                     gameOver = true;
                 }
+            } else if(Groups.player.size() > 0) {
+                winnerTeam = Team.derelict;
+                gameOver = true;
             }
         }
 
