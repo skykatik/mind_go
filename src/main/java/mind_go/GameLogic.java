@@ -55,7 +55,7 @@ public class GameLogic {
                 for (Unit unit : Groups.unit) {
                     Team team = unit.team;
                     if (unit.isFlying()) {
-                        unit.damagePierce(unit.maxHealth / 1000 / (unit instanceof Mechc ? 0.5f : 2.5f));
+                        unit.damagePierce(unit.maxHealth / 1000 / (unit instanceof Mechc ? 4f : 2f));
                     }
                     if (team != lastTeam) {
                         end = false;

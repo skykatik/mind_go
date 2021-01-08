@@ -303,7 +303,7 @@ public class Main extends Plugin {
         UnitTypes.fortress.health = 790 * 2;
         UnitTypes.corvus.health = 18000 * 2;
         UnitTypes.toxopid.health = 22000 / 1.5f;
-
+        UnitTypes.mono.health = 1000f;
         // Remove Unit Abilities
         UnitTypes.nova.abilities.clear();
         UnitTypes.pulsar.abilities.clear();

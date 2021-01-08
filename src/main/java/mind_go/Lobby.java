@@ -197,12 +197,12 @@ public class Lobby {
 
     public static void spawnUnits() {
         for (Room room : rooms) {
+            room.active = true;
             Unit unit = Type.get(room.classa).create(Team.sharded);
             unit.set(room.centreX, room.centreY);
 
             //Water Units Only
             if (unit instanceof WaterMovec && nextMap.tags.get("hasLiquid").equals("true")) {
-                room.active = true;
                 unit.tileOn().setFloorNet(Blocks.water);
             } else if (unit instanceof WaterMovec) {
                 room.active = false;
