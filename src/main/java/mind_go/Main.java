@@ -165,7 +165,6 @@ public class Main extends Plugin {
                 } else {
                     map.tags.put("hasLiquid", "false");
                 }
-                System.out.println(map.name() + " : liquid: " + map.tags.get("hasLiquid") + "\n");
             }
         });
     }
