@@ -49,7 +49,13 @@ public class Lobby {
     }
 
     public static void go() {
+        // DEBUG
+        if (Main.debug) {
+            System.out.println("GO in Lobby");
+        }
+        
         // Set LobbyState to in Lobby
+        Main.timer = 0;
         Lobby.inLobby = true;
         
         // Update GameTier
@@ -88,7 +94,12 @@ public class Lobby {
     }
 
     public static void out() {
+        // DEBUG
+        if (Main.debug) {
+            System.out.println("Out From Lobby");
+        }
         // Set Lobby State
+        Main.timer = 0;
         Lobby.inLobby = false;
         
         // Write Players Array

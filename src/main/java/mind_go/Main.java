@@ -99,6 +99,12 @@ public class Main extends Plugin {
                     }
                 } else /* Game Logic */ {
                     if (timer > gameTimer && !GameLogic.gameOver) /* Go to Lobby when Timer out*/ {
+                        
+                        // DEBUG
+                        if (debug) {
+                            System.out.println("Time Out, switch to the Lobby");
+                        }
+                        
                         Lobby.go();
                         timer = 0;
                     }
@@ -110,7 +116,8 @@ public class Main extends Plugin {
                         }
                         Call.setHudText(player.con, "Game end in: " + (int) ((gameTimer - timer) / 60) + "\nYour Health is: [red]" + health + "%");
                     }
-                    if (timerSeted) {
+                    
+                    if (timerSeted && timer > afterLoadTimer + 20) {
                         GameLogic.update();
 
                         Groups.player.each(player -> {
@@ -256,8 +263,8 @@ public class Main extends Plugin {
         UnitTypes.fortress.health = 790 * 2;
 
         // Remove Unit Abilities
-        UnitTypes.nova.abilities.forEach(UnitTypes.nova.abilities::remove);
-        UnitTypes.omura.abilities.forEach(UnitTypes.omura.abilities::remove);
+        UnitTypes.nova.abilities.clear();
+        UnitTypes.omura.abilities.clear();
     }
 
     public void debug() {
