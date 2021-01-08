@@ -1,6 +1,5 @@
 package mind_go;
 
-import arc.graphics.Color;
 import mindustry.Vars;
 import mindustry.content.Bullets;
 import mindustry.game.Team;
@@ -11,7 +10,7 @@ import mindustry.gen.Unit;
 
 public class Room {
 
-    public final static int ROOM_SIZE = 14;
+    public final static int ROOM_SIZE = 16;
     
     int roomSize;
     float x, y, endX, endY, centreX, centreY;

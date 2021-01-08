@@ -9,6 +9,7 @@ import arc.util.Log;
 import mindustry.game.Team;
 import mindustry.gen.Call;
 import mindustry.gen.Groups;
+import mindustry.gen.Mechc;
 import mindustry.gen.Nulls;
 import mindustry.gen.Player;
 import mindustry.gen.Unit;
@@ -45,7 +46,7 @@ public class GameLogic {
                     }
                     Lobby.go();
                 }
-            } else/* set when not gameOver */ {
+            } else /* set when not gameOver */ {
                 once = true;
             }
             if (Groups.unit.size() > 0) {
@@ -54,7 +55,7 @@ public class GameLogic {
                 for (Unit unit : Groups.unit) {
                     Team team = unit.team;
                     if (unit.isFlying()) {
-                        unit.damagePierce(unit.maxHealth / 1000 / 1.5f);
+                        unit.damagePierce(unit.maxHealth / 1000 / (unit instanceof Mechc ? 0.5f : 2.5f));
                     }
                     if (team != lastTeam) {
                         end = false;
@@ -66,7 +67,7 @@ public class GameLogic {
                     winnerTeam = lastTeam;
                     gameOver = true;
                 }
-            } else if(Groups.player.size() > 0) {
+            } else if(Groups.player.size() > 0) /* Team Counter */ {
                 winnerTeam = Team.derelict;
                 gameOver = true;
             }

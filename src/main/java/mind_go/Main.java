@@ -1,6 +1,7 @@
 package mind_go;
 
 import arc.Events;
+import arc.graphics.Color;
 import arc.math.Mathf;
 import arc.util.CommandHandler;
 import arc.util.Log;
@@ -24,6 +25,7 @@ import mindustry.world.blocks.storage.CoreBlock;
 import static mindustry.Vars.logic;
 import static mindustry.Vars.state;
 import mindustry.content.UnitTypes;
+import mindustry.gen.Mechc;
 import mindustry.maps.Map;
 
 public class Main extends Plugin {
@@ -37,6 +39,8 @@ public class Main extends Plugin {
 
     public static boolean debug = false,
             loaded = false,
+            mines = true,
+            cycle = true,
             timerSeted = false,
             worldLoaded = false;
 
@@ -54,6 +58,8 @@ public class Main extends Plugin {
         for (Block block : Vars.content.blocks()) {
             rules.bannedBlocks.add(block);
         }
+        rules.lighting = true;
+        rules.ambientLight = new Color(1,1,1,1);
         rules.waves = true;
         rules.waveTimer = false;
         rules.blockDamageMultiplier = 0.1f;
@@ -99,24 +105,29 @@ public class Main extends Plugin {
                     }
                 } else /* Game Logic */ {
                     if (timer > gameTimer && !GameLogic.gameOver) /* Go to Lobby when Timer out*/ {
-                        
+
                         // DEBUG
                         if (debug) {
                             System.out.println("Time Out, switch to the Lobby");
                         }
-                        
+
                         Lobby.go();
                         timer = 0;
                     }
 
                     for (Player player : Groups.player) /* Set Hud To Players */ {
+                        String text;
                         int health = (int) (100 - ((player.unit().maxHealth - player.unit().health) / (player.unit().maxHealth / 100)));
+                        text = "Game end in: " + (int) ((gameTimer - timer) / 60) + "\nYour Health is: [red]" + health + "%";
                         if (health < 6) {
                             player.unit().kill();
                         }
-                        Call.setHudText(player.con, "Game end in: " + (int) ((gameTimer - timer) / 60) + "\nYour Health is: [red]" + health + "%");
+                        if (player.unit() instanceof Mechc && player.unit().isFlying()) /* If unit fly then they get Danger Hud */ {
+                            text += "\n[crimson]Fly = Dead";
+                        }
+                        Call.setHudText(player.con, text);
                     }
-                    
+
                     if (timerSeted && timer > afterLoadTimer + 20) {
                         GameLogic.update();
 
@@ -151,6 +162,13 @@ public class Main extends Plugin {
 
             if (Lobby.inLobby) /* show text */ {
                 Lobby.showShopText(event.player);
+            } else {
+                for (Player player : Groups.player) {
+                    PlayerData date = data.get(player);
+                    if (date.unita != null && date.unita.health > 0 && date.player.name != null && date.player.name.equals(player.name)) {
+                        player.unit(date.unita);
+                    }
+                }
             }
         });
 
@@ -172,8 +190,15 @@ public class Main extends Plugin {
                 } else {
                     map.tags.put("hasLiquid", "false");
                 }
+
+                if (map.name().startsWith("water_only_")) {
+                    map.tags.put("waterOnly", "true");
+                } else {
+                    map.tags.put("waterOnly", "false");
+                }
             }
         });
+
     }
 
     // TODO: do sothing with that lol
@@ -210,6 +235,16 @@ public class Main extends Plugin {
             );
         });
 
+        handler.register("cycle", "enable/disable day/night cycle", args -> {
+            cycle = !cycle;
+            System.out.println("switched to: " + cycle);
+        });
+        
+        handler.register("mines", "enable/disable mines on map", args -> {
+            mines = !mines;
+            System.out.println("switched to: " + mines);
+        });
+        
         handler.register("debug", "fuck me", args -> {
             debug = !debug;
         });
@@ -237,7 +272,12 @@ public class Main extends Plugin {
 
         for (Tile tile : Vars.world.tiles) /* place walls on floor */ {
             if (tile.floor() == (Floor) Blocks.metalFloor5) {
-                tile.setNet(Mathf.random(0, 100) > 50 ? Blocks.thoriumWall : Blocks.plastaniumWall, Team.get(947), 0); // My love Number :Ç
+                tile.setNet(Mathf.random(0, 100) > 80 ? Mathf.random(0,100) > 80 ? Blocks.thoriumWall : Blocks.surgeWall : Blocks.plastaniumWall, Team.get(947), 0); // My love Number :Ç
+            }
+            if (mines) {
+                if (tile.block() == Blocks.air && Mathf.random(100) > 98) {
+                    tile.setNet(Blocks.shockMine, Team.get(947), 0);
+                }
             }
             // Set map to water if map has a water
             if (tile.floor().isLiquid) {
@@ -261,9 +301,13 @@ public class Main extends Plugin {
         UnitTypes.crawler.health = 180 * 2.5f;
         UnitTypes.mace.health = 500 * 1.7f;
         UnitTypes.fortress.health = 790 * 2;
+        UnitTypes.corvus.health = 18000 * 2;
+        UnitTypes.toxopid.health = 22000 / 1.5f;
 
         // Remove Unit Abilities
         UnitTypes.nova.abilities.clear();
+        UnitTypes.pulsar.abilities.clear();
+        UnitTypes.quasar.abilities.clear();
         UnitTypes.omura.abilities.clear();
     }
 
