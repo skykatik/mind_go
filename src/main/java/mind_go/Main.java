@@ -23,6 +23,7 @@ import mindustry.world.blocks.storage.CoreBlock;
 
 import static mindustry.Vars.logic;
 import static mindustry.Vars.state;
+import mindustry.maps.Map;
 
 public class Main extends Plugin {
 
@@ -102,6 +103,9 @@ public class Main extends Plugin {
 
                     for (Player player : Groups.player) /* Set Hud To Players */ {
                         int health = (int) (100 - ((player.unit().maxHealth - player.unit().health) / (player.unit().maxHealth / 100)));
+                        if (health < 6) {
+                            player.unit().kill();
+                        }
                         Call.setHudText(player.con, "Game end in: " + (int) ((gameTimer - timer) / 60) + "\nYour Health is: [red]" + health + "%");
                     }
                     if (timerSeted) {
@@ -151,6 +155,15 @@ public class Main extends Plugin {
             Lobby.go();
             Vars.netServer.openServer();
             System.out.println("SERVER IN PLUGIN CONTROL UHAHAHA\nServer Started not write /HOST");
+            
+            // set tup maps with liquids to create WaterMovec units
+            for (Map map : Vars.maps.all()) {
+                map.tags.put("hasLiquid", "false");
+                
+                if (map.name().startsWith("water_")) {
+                    map.tags.put("hasLiquid", "true");
+                }
+            }
         });
     }
 
@@ -216,6 +229,9 @@ public class Main extends Plugin {
         for (Tile tile : Vars.world.tiles) /* place walls on floor */ {
             if (tile.floor() == (Floor) Blocks.metalFloor5) {
                 tile.setNet(Mathf.random(0, 100) > 50 ? Blocks.thoriumWall : Blocks.plastaniumWall, Team.get(947), 0); // My love Number :Ç
+            }
+            if (tile.floor().isLiquid) {
+                Vars.state.map.tags.put("hasLiquid", "true");
             }
         }
         GameLogic.start(sx, sy, bx, by);

@@ -12,8 +12,10 @@ import mindustry.gen.Unit;
 public class Room {
 
     public final static int ROOM_SIZE = 14;
+    
     int roomSize;
     float x, y, endX, endY, centreX, centreY;
+    boolean active = true;
     
     Unit unit;
     Class classa = Class.Main;

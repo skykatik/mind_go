@@ -25,24 +25,26 @@ public class GameLogic {
             gameOver = false;
 
     public static void update() {
-        if (gameOver == true) {
+        if (gameOver == true) /* Timer for non instant translate to the lobby */{
             timer++;
-            if (once) {
+            if (once) /* show message with winner team */ {
                 gameOver(winnerTeam);
                 once = false;
             }
 
-            if (timer > gameOverTimer && !Lobby.inLobby) {
+            if (timer > gameOverTimer && !Lobby.inLobby) /* go to lobby when time out */ {
                 timer = 0;
                 gameOver = false;
                 Lobby.go();
             }
-        } else {
+        } else /* set when not gameOver */ {
             once = true;
         }
+        // Set to 0 commands players
         int shardedPlayers = 0,
                 bluePlayers = 0;
-
+        
+        // Get how many units live and add teamPoint
         for (Unit unit : Groups.unit) {
             if (unit.health >= 0) {
                 if (unit.team() == Team.sharded) {
@@ -51,10 +53,11 @@ public class GameLogic {
                     bluePlayers++;
                 }
             }
-            if (Main.debug) {
+            if (Main.debug) /* debug, print counter */ {
                 System.out.println(bluePlayers + " : " + shardedPlayers);
             }
         }
+        // Game State
         if (shardedPlayers <= 0) {
             gameOver = true;
             winnerTeam = Team.blue;
@@ -76,7 +79,14 @@ public class GameLogic {
         Call.infoMessage(text);
     }
 
-    public static void start(float sx, float sy, float bx, float by) /* sharded, blue */ {
+    /**
+     * 
+     * @param sx sharded core x
+     * @param sy sharded core y
+     * @param bx blue core x
+     * @param by blue core y
+     */
+    public static void start(float sx, float sy, float bx, float by) {
         for (Player player : Groups.player) {
             // Get Data From Hash Map
             PlayerData data = Main.data.get(player);

@@ -4,13 +4,16 @@ import arc.math.Mathf;
 import arc.struct.Seq;
 import mindustry.Vars;
 import static mindustry.Vars.state;
+import mindustry.content.Blocks;
 import mindustry.game.Gamemode;
 import mindustry.game.Team;
 import mindustry.gen.Call;
 import mindustry.gen.Groups;
 import mindustry.gen.Player;
 import mindustry.gen.Unit;
+import mindustry.gen.WaterMovec;
 import mindustry.maps.Map;
+import mindustry.maps.MapPreviewLoader;
 
 public class Lobby {
 
@@ -20,17 +23,17 @@ public class Lobby {
     public static void init() {
         nextMap = loadRandomMap();
         rooms = new Seq();
-        rooms.add(new Room(Class.Main, "[#dba463]|Basic|Type|", 5, 18));
-        rooms.add(new Room(Class.Spiders, "[#bc4a9b]|Spider|Type|", 18, 5));
-        rooms.add(new Room(Class.Support, "[#9cdb43]|Support|Type|", 31, 18));
-        //rooms.add(new Room(Class.Aire, "[white]|Air|Type|"))
+        rooms.add(new Room(Class.Main, "[#dba463]|Basic|Type|", 5, 18)); // left centre
+        rooms.add(new Room(Class.Spiders, "[#bc4a9b]|Spider|Type|", 18, 5)); // bottom centre
+        rooms.add(new Room(Class.Support, "[#9cdb43]|Support|Type|", 31, 18)); // right centre
+        rooms.add(new Room(Class.Naval, "[sky]|Naval|Type|", 18, 31)); // top centre
     }
 
     public static void update() {
         for (Player player : Groups.player) {
             String text = "You pick: [accent]Nothing";
             for (Room room : rooms) {
-                if (room.check(player)) /* Check Player In Room */ {
+                if (room.check(player) && room.active) /* Check Player In Room */ {
                     text = "You pick: [accent]" + room.name;
                     Main.data.get(player).unit = room.classa;
                 }
@@ -68,6 +71,7 @@ public class Lobby {
         // World Load Start
         Call.worldDataBegin();
         Vars.world.loadMap(Vars.maps.byName("lobby"));
+        Vars.world.tile((int) rooms.get(3).centreX / Vars.tilesize, (int) rooms.get(3).centreY / Vars.tilesize).setFloorNet(Blocks.water);
         // World Load End
         
         // Rules Load
@@ -140,13 +144,20 @@ public class Lobby {
         float centreY = Vars.world.height() / 2 * Vars.tilesize;
         Call.label(player.con, "[white]Next Map is: [accent]" + nextMap.name() + "\n[white]Author is: [accent]" + nextMap.author(), 99999, centreX, centreY);
         for (Room room : rooms) /* show text in centre room */ {
-            Call.label(player.con, room.name, 99999, room.centreX, room.centreY);
+            String text = room.active ? "" : "\n[red]Disabled [white]: on this map";
+            Call.label(player.con, room.name + text, 99999, room.centreX, room.centreY);
         }
     }
     
     public static void spawnUnits() {
         for (Room room : rooms) {
             Unit unit = Type.get(room.classa).create(Team.sharded);
+            if (unit instanceof  WaterMovec && nextMap.tags.get("hasLiquid").equals("true")) {
+                room.active = true;
+            } else if (unit instanceof  WaterMovec) {
+                room.active = false;
+                continue;
+            }
             unit.set(room.centreX, room.centreY);
             unit.add();
             room.unit = unit;
