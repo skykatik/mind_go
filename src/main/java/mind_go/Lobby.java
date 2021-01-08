@@ -72,7 +72,7 @@ public class Lobby {
         Main.cycle = Mathf.random(100) > 10;
 
         // Mines
-        Main.mines = Mathf.random(100) < 10;
+        Main.mines = Mathf.random(100) > 70;
 
         // Add Players In 'players' Seq
         Seq<Player> players = new Seq<>();
