@@ -23,6 +23,7 @@ import mindustry.world.blocks.storage.CoreBlock;
 
 import static mindustry.Vars.logic;
 import static mindustry.Vars.state;
+import mindustry.content.UnitTypes;
 import mindustry.maps.Map;
 
 public class Main extends Plugin {
@@ -47,6 +48,7 @@ public class Main extends Plugin {
         super.init();
         Lobby.init();
         Type.init();
+        initStats();
 
         // Rules Stuff Here
         for (Block block : Vars.content.blocks()) {
@@ -71,10 +73,10 @@ public class Main extends Plugin {
                 afterLoadTimer--;
                 if (afterLoadTimer <= 0) {
                     if (Lobby.inLobby) /* Lobby Once */ {
+                        Lobby.spawnUnits();
                         Groups.player.each(player -> /* Show Text To Player */ {
                                     Lobby.showShopText(player);
                                 });
-                        Lobby.spawnUnits();
                         if (debug) /* Debug Stuff */ {
                             debug();
                         }
@@ -110,7 +112,7 @@ public class Main extends Plugin {
                     }
                     if (timerSeted) {
                         GameLogic.update();
-                        
+
                         Groups.player.each(player -> {
                             PlayerData date = data.get(player);
                             if (date.unita != null && date.unita.dead == true) {
@@ -155,14 +157,15 @@ public class Main extends Plugin {
             Lobby.go();
             Vars.netServer.openServer();
             System.out.println("SERVER IN PLUGIN CONTROL UHAHAHA\nServer Started not write /HOST");
-            
+
             // set tup maps with liquids to create WaterMovec units
             for (Map map : Vars.maps.all()) {
-                map.tags.put("hasLiquid", "false");
-                
                 if (map.name().startsWith("water_")) {
                     map.tags.put("hasLiquid", "true");
+                } else {
+                    map.tags.put("hasLiquid", "false");
                 }
+                System.out.println(map.name() + " : liquid: " + map.tags.get("hasLiquid") + "\n");
             }
         });
     }
@@ -200,7 +203,7 @@ public class Main extends Plugin {
                     + "\nNext Map: " + Lobby.nextMap.name()
             );
         });
-        
+
         handler.register("debug", "fuck me", args -> {
             debug = !debug;
         });
@@ -243,6 +246,18 @@ public class Main extends Plugin {
                 tile.setOverlay(Blocks.air);
             }
         }
+    }
+
+    public void initStats() {
+        // Init Unit Variables
+        UnitTypes.dagger.health = 140 * 2;
+        UnitTypes.crawler.health = 180 * 2.5f;
+        UnitTypes.mace.health = 500 * 1.7f;
+        UnitTypes.fortress.health = 790 * 2;
+
+        // Remove Unit Abilities
+        UnitTypes.nova.abilities.forEach(UnitTypes.nova.abilities::remove);
+        UnitTypes.omura.abilities.forEach(UnitTypes.omura.abilities::remove);
     }
 
     public void debug() {

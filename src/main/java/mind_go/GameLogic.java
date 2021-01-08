@@ -53,9 +53,12 @@ public class GameLogic {
                     bluePlayers++;
                 }
             }
-            if (Main.debug) /* debug, print counter */ {
-                System.out.println(bluePlayers + " : " + shardedPlayers);
+            if (unit.isFlying()) {
+                unit.damagePierce(unit.maxHealth / 1000 / 1.5f);
             }
+        }
+        if (Main.debug) /* debug, print counter */ {
+            System.out.println(bluePlayers + " : " + shardedPlayers);
         }
         // Game State
         if (shardedPlayers <= 0) {
