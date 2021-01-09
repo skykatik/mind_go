@@ -48,8 +48,10 @@ public class Lobby {
             Class unit = EventState.wateronly ? Class.Naval : EventState.aironly ? Class.Air : Class.Main;
             String text = bundle.get("lobby.nopick");
             for (Room room : rooms) {
-                Main.data.get(player).unit = unit;
-                text = bundle.get("lobby.default") + room.name;
+                if (unit == room.classa && room.active) {
+                    Main.data.get(player).unit = unit;
+                    text = bundle.get("lobby.default") + room.name;
+                }
                 if (room.check(player) && room.active) /* Check Player In Room */ {
                     text = bundle.get("lobby.pick") + room.name;
                     Main.data.get(player).unit = room.classa;
@@ -226,9 +228,23 @@ public class Lobby {
         if (EventState.boss) {
             text += bundle.get("event.boss.in");
         }
+        EventState.wateronly = false;
+        EventState.groundonly = false;
+        EventState.aironly = false;
         for (String only : EventState.onlys) {
             if (nextMap.tags.get(only).equals("true")) {
                 text += bundle.get("only." + only);
+                switch (only) {
+                    case "water_only_":
+                        EventState.wateronly = true;
+                        break;
+                    case "ground_only_":
+                        EventState.groundonly = true;
+                        break;
+                    case "air_only_":
+                        EventState.aironly = true;
+                        break;
+                }
             }
         }
         Call.label(player.con, text, 99999, centreX, centreY);
