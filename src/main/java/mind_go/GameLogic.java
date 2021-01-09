@@ -15,6 +15,11 @@ import mindustry.gen.Player;
 import mindustry.gen.Unit;
 
 import static mind_go.Main.bundle;
+import mindustry.content.Blocks;
+import mindustry.content.Items;
+import mindustry.content.UnitTypes;
+import mindustry.gen.Payloadc;
+import mindustry.world.blocks.payloads.BuildPayload;
 
 /**
  *
@@ -115,6 +120,20 @@ public class GameLogic {
             Unit unit = Type.get(data.unit).create(team);
             // Set Unit to core position
             unit.set(unit.team() == Team.sharded ? sx : bx, unit.team() == Team.sharded ? sy : by);
+            
+            // Add Thorium Reactor to mono
+            if (Type.tier == 0 && data.unit == Class.AirSupport) /* Mono With Thorium Reactor */ {
+                unit.type = UnitTypes.mono;
+                unit.addItem(Items.thorium, unit.type.itemCapacity);
+
+                Payloadc s = (Payloadc) unit;
+                s.addPayload(new BuildPayload(Blocks.thoriumReactor, unit.team));
+            }
+            // Add Blast Compound to crawler
+            if (Type.tier == 0 && data.unit == Class.Spiders) /* Crawler With Blast Compound */ {
+                unit.addItem(Items.blastCompound, unit.type.itemCapacity);
+            }
+            
             player.team(team);
             // Add Unit
             unit.add();

@@ -164,6 +164,7 @@ public class Main extends Plugin {
                     if (timerSeted && timer > afterLoadTimer + 20) {
                         GameLogic.update();
 
+                        // return player again in unit if it try to out from unit
                         Groups.player.each(player -> {
                             PlayerData date = data.get(player);
                             if (date.unita != null && date.unita.dead == true) {

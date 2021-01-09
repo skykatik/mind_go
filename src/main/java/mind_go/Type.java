@@ -1,11 +1,12 @@
 package mind_go;
 
+import arc.math.Mathf;
 import arc.struct.ObjectMap;
 import mindustry.content.UnitTypes;
 import mindustry.type.UnitType;
 
 public class Type {
-
+    public static int oldTier = 0;
     public static int tier = 1;
     public static ObjectMap<Class, UnitType[]> map = new ObjectMap<>();
 
@@ -21,5 +22,11 @@ public class Type {
 
     public static UnitType get(Class class1) {
         return map.get(class1)[tier];
+    }
+    
+    public static int changeTier() /* return not repeated tier */ {
+        int ttier = Mathf.random(0, 5);
+        if (ttier == oldTier) return changeTier();
+        return ttier;
     }
 }

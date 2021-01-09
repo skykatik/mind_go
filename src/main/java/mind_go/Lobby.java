@@ -10,16 +10,20 @@ import static mind_go.Main.bundle;
 import static mindustry.Vars.bufferSize;
 import static mindustry.Vars.state;
 import mindustry.content.Blocks;
+import mindustry.content.Items;
+import mindustry.content.UnitTypes;
 import mindustry.game.Gamemode;
 import mindustry.game.Team;
 import mindustry.gen.Call;
 import mindustry.gen.Groups;
 import mindustry.gen.Legsc;
 import mindustry.gen.Mechc;
+import mindustry.gen.Payloadc;
 import mindustry.gen.Player;
 import mindustry.gen.Unit;
 import mindustry.gen.WaterMovec;
 import mindustry.maps.Map;
+import mindustry.world.blocks.payloads.BuildPayload;
 
 @SuppressWarnings("unchecked")
 public class Lobby {
@@ -69,7 +73,8 @@ public class Lobby {
         Lobby.inLobby = true;
 
         // Update GameTier
-        Type.tier = Mathf.random(0, 4);
+        Type.oldTier = Type.tier;
+        Type.tier = Type.changeTier();
 
         // Switched To Night?
         Main.rules.lighting = false;
@@ -178,7 +183,11 @@ public class Lobby {
     public static void showShopText(Player player) {
         float centreX = Vars.world.width() / 2 * Vars.tilesize;
         float centreY = Vars.world.height() / 2 * Vars.tilesize;
-        String text = bundle.get("lobby.nmap") + nextMap.name() + bundle.get("lobby.author") + nextMap.author();
+
+        String text = bundle.get("lobby.nmap") + nextMap.name()
+                + bundle.get("lobby.author") + nextMap.author()
+                + bundle.get("lobby.mapsize") + nextMap.width + ":" + nextMap.height;
+
         if (!Main.cycle) {
             text += bundle.get("lobby.night");
         }
@@ -188,7 +197,7 @@ public class Lobby {
 
         Call.label(player.con, text, 99999, centreX, centreY);
         for (Room room : rooms) /* show text in centre room */ {
-            String textt = room.active ? "" : bundle.get("lobby.desable"); // that only for WaterRooms xd
+            String textt = room.active ? "" : bundle.get("lobby.disable"); // that only for WaterRooms xd
             if (room.classa == Class.Air || room.classa == Class.AirSupport) {
                 textt += bundle.get("lobby.live");
             }
@@ -215,6 +224,18 @@ public class Lobby {
                 continue;
             }
 
+            if (Type.tier == 0 && room.classa == Class.AirSupport) /* Mono With Thorium Reactor */ {
+                unit.type = UnitTypes.mono;
+                unit.addItem(Items.thorium, unit.type.itemCapacity);
+
+                Payloadc s = (Payloadc) unit;
+                s.addPayload(new BuildPayload(Blocks.thoriumReactor, unit.team));
+            }
+            
+            if (Type.tier == 0 && room.classa == Class.Spiders) /* Crawler With Blast Compound */ {
+                unit.addItem(Items.blastCompound, unit.type.itemCapacity);
+            }
+            
             unit.add();
             room.unit = unit;
         }
