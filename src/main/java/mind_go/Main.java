@@ -273,6 +273,13 @@ public class Main extends Plugin {
             );
         });
 
+        handler.register("events", bundle.get("commands.event.description"), args -> {
+            Log.info(bundle.get("commands.event.cycle") + EventState.cycle
+                    + bundle.get("commands.event.mines") + EventState.mines
+                    + bundle.get("commands.event.meat") + EventState.meat
+                    + bundle.get("commands.event.wateronly") + EventState.wateronly);
+        });
+
         handler.register("cycle", bundle.get("commands.cycle.description"), args -> {
             EventState.cycle = !EventState.cycle;
             Log.info(bundle.get("commands.cycle.switch") + EventState.cycle);

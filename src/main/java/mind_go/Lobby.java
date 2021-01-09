@@ -85,7 +85,7 @@ public class Lobby {
         EventState.mines = Mathf.random(100) > 70;
         
         // Meat 
-        EventState.meat = Mathf.random(0, 100) > 90;
+        EventState.meat = Mathf.random(0, 100) > 50;
         
         if (EventState.meat) {
             Type.tier = 4;
@@ -134,7 +134,7 @@ public class Lobby {
         // Day Night Cycle
         if (!EventState.cycle) {
             Main.rules.lighting = true;
-            Main.rules.ambientLight = new Color(0.4f, 0.4f, 0.4f, 1);
+            Main.rules.ambientLight = new Color(0, 0, 0, 0.7f);
             Main.rules.enemyLights = false;
         } else {
             Main.rules.lighting = false;
@@ -218,6 +218,9 @@ public class Lobby {
         if (EventState.meat) {
             text += bundle.get("event.meat");
         }
+        if (EventState.wateronly) {
+            text += bundle.get("event.wateronly");
+        }
 
         Call.label(player.con, text, 99999, centreX, centreY);
         for (Room room : rooms) /* show text in centre room */ {
@@ -230,6 +233,7 @@ public class Lobby {
     }
 
     public static void spawnUnits() {
+        EventState.wateronly = nextMap.tags.get("waterOnly").equals("true");
         for (Room room : rooms) {
             room.active = true;
             Unit unit = Type.get(room.classa).create(Team.sharded);

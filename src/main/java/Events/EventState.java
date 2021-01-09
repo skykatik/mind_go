@@ -13,5 +13,6 @@ public class EventState {
     public static boolean 
             mines = false,
             meat = false,
+            wateronly = true,
             cycle = false;
 }
