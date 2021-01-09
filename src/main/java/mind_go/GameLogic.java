@@ -69,7 +69,7 @@ public class GameLogic {
                     winnerTeam = lastTeam;
                     gameOver = true;
                 }
-            } else if(Groups.player.size() > 0) /* Team Counter */ {
+            } else if (Groups.player.size() > 0) /* Team Counter */ {
                 winnerTeam = Team.derelict;
                 gameOver = true;
             }

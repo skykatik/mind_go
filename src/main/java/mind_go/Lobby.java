@@ -163,18 +163,17 @@ public class Lobby {
         Call.setRules(Main.rules);
     }
 
-    public static Map loadRandomMap(){
+    public static Map loadRandomMap() {
         // Get Random Map
         Map map = Vars.maps.getNextMap(Gamemode.survival, Vars.state.map);
         // Try To Load Map Again If Map Name Equals Shop
-        if(map != null && map.name().equals("Lobby")){
+        if (map != null && map.name().equals("Lobby")) {
             // Haha Let's GO Start Again
             //System.out.println("FUCK LOBBY");
             return loadRandomMap();
         }
         return map;
     }
-
 
     public static void showShopText(Player player) {
         float centreX = Vars.world.width() / 2 * Vars.tilesize;

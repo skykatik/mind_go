@@ -11,11 +11,11 @@ import mindustry.gen.Unit;
 public class Room {
 
     public final static int ROOM_SIZE = 16;
-    
+
     int roomSize;
     float x, y, endX, endY, centreX, centreY;
     boolean active = true;
-    
+
     Unit unit;
     Class classa = Class.Main;
     String name = "null";
@@ -52,7 +52,7 @@ public class Room {
             }
         }
     }
-    
+
     public void debugDraw() {
         for (int xx = (int) x / Vars.tilesize; xx < (int) endX / Vars.tilesize; xx++) {
             for (int yy = (int) y / Vars.tilesize; yy < (int) endY / Vars.tilesize; yy++) {

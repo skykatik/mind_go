@@ -62,24 +62,22 @@ public class Main extends Plugin {
     public Main() {
 
         Fi cfg = dataDirectory.child("config.json");
-        if(!cfg.exists()){
+        if (!cfg.exists()) {
             cfg.writeString(gson.toJson(config = new Config()));
             Log.info("Config created");
-        }else{
+        } else {
             config = gson.fromJson(cfg.reader(), Config.class);
         }
 
         bundle = new Bundle();
 
-        try{
+        try {
             Streams.copy(Objects.requireNonNull(Main.class.getClassLoader().getResourceAsStream("Lobby.msav")),
                     customMapDirectory.child("Lobby.msav").write(false));
-        }catch(IOException e){
+        } catch (IOException e) {
             Log.err(e);
         }
     }
-
-
 
     @Override
     public void init() {
@@ -116,8 +114,8 @@ public class Main extends Plugin {
                     if (Lobby.inLobby) /* Lobby Once */ {
                         Lobby.spawnUnits();
                         Groups.player.each(player -> /* Show Text To Player */ {
-                            Lobby.showShopText(player);
-                        });
+                                    Lobby.showShopText(player);
+                                });
                         if (debug) /* Debug Stuff */ {
                             debug();
                         }
@@ -250,8 +248,6 @@ public class Main extends Plugin {
             Log.info(bundle.get("commands.cfg.result"));
         });
 
-
-
         handler.register("start", bundle.get("commands.start.description"), args -> {
             if (!state.is(GameState.State.menu)) {
                 Log.err("commands.start.error");
@@ -277,17 +273,17 @@ public class Main extends Plugin {
             );
         });
 
-        handler.register("cycle",bundle.get("commands.cycle.description"), args -> {
+        handler.register("cycle", bundle.get("commands.cycle.description"), args -> {
             cycle = !cycle;
             Log.info(bundle.get("commands.cycle.switch") + cycle);
         });
 
-        handler.register("mines",bundle.get("commands.mines.description"), args -> {
+        handler.register("mines", bundle.get("commands.mines.description"), args -> {
             mines = !mines;
             Log.info(bundle.get("commands.mines.switch") + mines);
         });
 
-        handler.register("debug",bundle.get("commands.debug.description"), args -> {
+        handler.register("debug", bundle.get("commands.debug.description"), args -> {
             debug = !debug;
             Log.info(bundle.get("commands.debug.start"));
         });

@@ -6,23 +6,23 @@ import java.util.ResourceBundle;
 
 import static mind_go.Main.config;
 
-public class Bundle{
+public class Bundle {
 
     private final ResourceBundle bundle;
 
-    public Bundle(){
+    public Bundle() {
         bundle = ResourceBundle.getBundle("bundle", new Locale(config.locale));
     }
 
-    public String get(String key){
-        try{
+    public String get(String key) {
+        try {
             return bundle.getString(key);
-        }catch(Throwable t){
+        } catch (Throwable t) {
             return "???" + key + "???";
         }
     }
 
-    public String format(String key, Object... values){
+    public String format(String key, Object... values) {
         return MessageFormat.format(get(key), values);
     }
 }
