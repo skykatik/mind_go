@@ -3,7 +3,11 @@ package mind_go;
 import arc.graphics.Color;
 import arc.math.Mathf;
 import arc.struct.Seq;
+import arc.util.Log;
 import mindustry.Vars;
+
+import static mind_go.Main.bundle;
+import static mindustry.Vars.bufferSize;
 import static mindustry.Vars.state;
 import mindustry.content.Blocks;
 import mindustry.game.Gamemode;
@@ -17,6 +21,7 @@ import mindustry.gen.Unit;
 import mindustry.gen.WaterMovec;
 import mindustry.maps.Map;
 
+@SuppressWarnings("unchecked")
 public class Lobby {
 
     public static boolean inLobby = false;
@@ -26,25 +31,25 @@ public class Lobby {
     public static void init() {
         nextMap = loadRandomMap();
         rooms = new Seq();
-        rooms.add(new Room(Class.Main, "[#dba463]|Basic|Type|", 8, 29)); // centre left
-        rooms.add(new Room(Class.Support, "[#9cdb43]|Support|Type|", 50, 29)); // centre right
-        rooms.add(new Room(Class.Naval, "[sky]|Naval|Type|", 17, 5)); // bottom left
-        rooms.add(new Room(Class.Spiders, "[#bc4a9b]|Spider|Type|", 41, 5)); // bottom right
-        rooms.add(new Room(Class.Air, "[#a6fcdb]|Air|Type|", 17, 53)); // top left
-        rooms.add(new Room(Class.AirSupport, "[#92dcba]|AirSupport|Type|", 41, 53)); // right top
+        rooms.add(new Room(Class.Main, bundle.get("room.main"), 8, 29)); // centre left
+        rooms.add(new Room(Class.Support, bundle.get("room.support"), 50, 29)); // centre right
+        rooms.add(new Room(Class.Naval, bundle.get("room.naval"), 17, 5)); // bottom left
+        rooms.add(new Room(Class.Spiders, bundle.get("room.spider"), 41, 5)); // bottom right
+        rooms.add(new Room(Class.Air, bundle.get("room.air"), 17, 53)); // top left
+        rooms.add(new Room(Class.AirSupport, bundle.get("room.airsupport"), 41, 53)); // right top
     }
 
     public static void update() {
         for (Player player : Groups.player) {
-            String text = "You pick: [accent]Nothing";
+            String text = bundle.get("lobby.nopick");
             for (Room room : rooms) {
                 if (room.check(player) && room.active) /* Check Player In Room */ {
-                    text = "You pick: [accent]" + room.name;
+                    text = bundle.get("lobby.pick") + room.name;
                     Main.data.get(player).unit = room.classa;
                 }
             }
             // Show how much time to start
-            text += "\n[white]Time to start: [accent]" + (int) ((Main.lobbyTimer - Main.timer) / 60);
+            text += bundle.get("lobby.timer") + (int) ((Main.lobbyTimer - Main.timer) / 60);
             Call.setHudText(player.con(), text);
         }
 
@@ -56,7 +61,7 @@ public class Lobby {
     public static void go() {
         // DEBUG
         if (Main.debug) {
-            System.out.println("GO in Lobby");
+            Log.info(bundle.get("debug.lobby"));
         }
 
         // Set LobbyState to in Lobby
@@ -108,7 +113,7 @@ public class Lobby {
     public static void out() {
         // DEBUG
         if (Main.debug) {
-            System.out.println("Out From Lobby");
+            Log.info(bundle.get("debug.lobbyx2"));
         }
         // Set Lobby State
         Main.timer = 0;
@@ -158,38 +163,35 @@ public class Lobby {
         Call.setRules(Main.rules);
     }
 
-    public static Map loadRandomMap(Map oldMap) {
+    public static Map loadRandomMap(){
         // Get Random Map
         Map map = Vars.maps.getNextMap(Gamemode.survival, Vars.state.map);
         // Try To Load Map Again If Map Name Equals Shop
-        if (map != null && map.name().equals("lobby")) {
+        if(map != null && map.name().equals("Lobby")){
             // Haha Let's GO Start Again
             //System.out.println("FUCK LOBBY");
-            return loadRandomMap(map);
+            return loadRandomMap();
         }
         return map;
     }
 
-    public static Map loadRandomMap() {
-        return loadRandomMap(Vars.state.map);
-    }
 
     public static void showShopText(Player player) {
         float centreX = Vars.world.width() / 2 * Vars.tilesize;
         float centreY = Vars.world.height() / 2 * Vars.tilesize;
-        String text = "[white]Next Map is: [accent]" + nextMap.name() + "\n[white]Author is: [accent]" + nextMap.author();
+        String text = bundle.get("lobby.nmap") + nextMap.name() + bundle.get("lobby.author") + nextMap.author();
         if (!Main.cycle) {
-            text += "\nNight Now";
+            text += bundle.get("lobby.night");
         }
         if (Main.mines) {
-            text += "\n[gray]|Mines in this round|";
+            text += bundle.get("lobby.mines");
         }
 
         Call.label(player.con, text, 99999, centreX, centreY);
         for (Room room : rooms) /* show text in centre room */ {
-            String textt = room.active ? "" : "\n[red]Disabled [white]: on this map"; // that only for WaterRooms xd
+            String textt = room.active ? "" : bundle.get("lobby.desable"); // that only for WaterRooms xd
             if (room.classa == Class.Air || room.classa == Class.AirSupport) {
-                textt += "\n[crimson]|Unit Live|\n|100 secs|";
+                textt += bundle.get("lobby.live");
             }
             Call.label(player.con, room.name + textt, 99999, room.centreX, room.centreY - Vars.tilesize * 4.8f);
         }

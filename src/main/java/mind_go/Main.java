@@ -1,20 +1,23 @@
 package mind_go;
 
 import arc.Events;
+import arc.files.Fi;
 import arc.graphics.Color;
 import arc.math.Mathf;
-import arc.util.CommandHandler;
-import arc.util.Log;
-import java.util.HashMap;
+import arc.util.*;
+import arc.util.io.Streams;
+import com.google.gson.*;
+import components.Bundle;
+import components.Config;
 import mindustry.Vars;
 import mindustry.content.Blocks;
+import mindustry.content.UnitTypes;
 import mindustry.core.GameState;
 import mindustry.game.EventType;
 import mindustry.game.Rules;
 import mindustry.game.Team;
-import mindustry.gen.Call;
-import mindustry.gen.Groups;
-import mindustry.gen.Player;
+import mindustry.gen.*;
+import mindustry.maps.Map;
 import mindustry.mod.Plugin;
 import mindustry.world.Block;
 import mindustry.world.Tile;
@@ -22,13 +25,23 @@ import mindustry.world.blocks.environment.Floor;
 import mindustry.world.blocks.environment.OreBlock;
 import mindustry.world.blocks.storage.CoreBlock;
 
-import static mindustry.Vars.logic;
-import static mindustry.Vars.state;
-import mindustry.content.UnitTypes;
-import mindustry.gen.Mechc;
-import mindustry.maps.Map;
+import java.io.IOException;
+import java.util.HashMap;
+import java.util.Objects;
+
+import static mindustry.Vars.*;
 
 public class Main extends Plugin {
+
+    public static Config config;
+    public static Bundle bundle;
+
+    public static final Gson gson = new GsonBuilder()
+            .setFieldNamingPolicy(FieldNamingPolicy.LOWER_CASE_WITH_DASHES)
+            .disableHtmlEscaping()
+            .serializeNulls()
+            .setPrettyPrinting()
+            .create();
 
     public static int afterLoadTimer = 150,
             timer = 0,
@@ -46,6 +59,28 @@ public class Main extends Plugin {
 
     public static Rules rules = new Rules();
 
+    public Main() {
+
+        Fi cfg = dataDirectory.child("config.json");
+        if(!cfg.exists()){
+            cfg.writeString(gson.toJson(config = new Config()));
+            Log.info("Config created");
+        }else{
+            config = gson.fromJson(cfg.reader(), Config.class);
+        }
+
+        bundle = new Bundle();
+
+        try{
+            Streams.copy(Objects.requireNonNull(Main.class.getClassLoader().getResourceAsStream("Lobby.msav")),
+                    customMapDirectory.child("Lobby.msav").write(false));
+        }catch(IOException e){
+            Log.err(e);
+        }
+    }
+
+
+
     @Override
     public void init() {
         // Some Stuff Init
@@ -59,7 +94,7 @@ public class Main extends Plugin {
             rules.bannedBlocks.add(block);
         }
         rules.lighting = true;
-        rules.ambientLight = new Color(1,1,1,1);
+        rules.ambientLight = new Color(1, 1, 1, 1);
         rules.waves = true;
         rules.waveTimer = false;
         rules.blockDamageMultiplier = 0.1f;
@@ -74,15 +109,15 @@ public class Main extends Plugin {
         Events.on(EventType.Trigger.update.getClass(), event -> {
             // Timer oh no
             timer++;
-            // Once after load event, when player join they are have a "connection state", and have chance 50% for not show a Call.label 
+            // Once after load event, when player join they are have a "connection state", and have chance 50% for not show a Call.label
             if (loaded) {
                 afterLoadTimer--;
                 if (afterLoadTimer <= 0) {
                     if (Lobby.inLobby) /* Lobby Once */ {
                         Lobby.spawnUnits();
                         Groups.player.each(player -> /* Show Text To Player */ {
-                                    Lobby.showShopText(player);
-                                });
+                            Lobby.showShopText(player);
+                        });
                         if (debug) /* Debug Stuff */ {
                             debug();
                         }
@@ -108,7 +143,7 @@ public class Main extends Plugin {
 
                         // DEBUG
                         if (debug) {
-                            System.out.println("Time Out, switch to the Lobby");
+                            Log.info(bundle.get("game.timeout"));
                         }
 
                         Lobby.go();
@@ -118,12 +153,12 @@ public class Main extends Plugin {
                     for (Player player : Groups.player) /* Set Hud To Players */ {
                         String text;
                         int health = (int) (100 - ((player.unit().maxHealth - player.unit().health) / (player.unit().maxHealth / 100)));
-                        text = "Game end in: " + (int) ((gameTimer - timer) / 60) + "\nYour Health is: [red]" + health + "%";
+                        text = bundle.get("game.timer") + (int) ((gameTimer - timer) / 60) + bundle.get("game.health") + health + "%";
                         if (health < 6) {
                             player.unit().kill();
                         }
                         if (player.unit() instanceof Mechc && player.unit().isFlying()) /* If unit fly then they get Danger Hud */ {
-                            text += "\n[crimson]Fly = Dead";
+                            text += bundle.get("game.fly");
                         }
                         Call.setHudText(player.con, text);
                     }
@@ -181,7 +216,7 @@ public class Main extends Plugin {
         Events.on(EventType.ServerLoadEvent.class, event -> {
             Lobby.go();
             Vars.netServer.openServer();
-            System.out.println("SERVER IN PLUGIN CONTROL UHAHAHA\nServer Started not write /HOST");
+            Log.info(bundle.get("server.start"));
 
             // set tup maps with liquids to create WaterMovec units
             for (Map map : Vars.maps.all()) {
@@ -209,9 +244,17 @@ public class Main extends Plugin {
 
     @Override
     public void registerServerCommands(CommandHandler handler) {
-        handler.register("start", "START THIS FUCKING GAME AAAAAAA", args -> {
+
+        handler.register("reload-cfg", bundle.get("commands.cfg.description"), args -> {
+            config = gson.fromJson(dataDirectory.child("config.json").readString(), Config.class);
+            Log.info(bundle.get("commands.cfg.result"));
+        });
+
+
+
+        handler.register("start", bundle.get("commands.start.description"), args -> {
             if (!state.is(GameState.State.menu)) {
-                Log.err("SHUT UP THE SERVER UHHHHHHH");
+                Log.err("commands.start.error");
                 return;
             }
 
@@ -219,34 +262,34 @@ public class Main extends Plugin {
             state.rules = rules.copy();
             logic.play();
             Vars.netServer.openServer();
-
             Lobby.go();
-            System.out.println("Let's go");
+            Log.info(bundle.get("commands.start.successful"));
         });
 
-        handler.register("info", "get some information from stats", args -> {
-            System.out.println("Current Map: " + Vars.state.map.name()
-                    + "\nCurrent Tier: " + Type.tier
-                    + "\nPlayerData's: " + data.size()
-                    + "\nRooms In Lobby: " + Lobby.rooms.size
-                    + "\nUnits: " + Groups.unit.size()
-                    + "\nIn Lobby: " + Lobby.inLobby
-                    + "\nNext Map: " + Lobby.nextMap.name()
+        handler.register("stats", bundle.get("commands.info.description"), args -> {
+            Log.info(bundle.get("commands.info.map") + Vars.state.map.name()
+                    + bundle.get("commands.info.tier") + Type.tier
+                    + bundle.get("commands.info.data") + data.size()
+                    + bundle.get("commands.info.rooms") + Lobby.rooms.size
+                    + bundle.get("commands.info.units") + Groups.unit.size()
+                    + bundle.get("commands.info.inlobby") + Lobby.inLobby
+                    + bundle.get("commands.info.nmap") + Lobby.nextMap.name()
             );
         });
 
-        handler.register("cycle", "enable/disable day/night cycle", args -> {
+        handler.register("cycle",bundle.get("commands.cycle.description"), args -> {
             cycle = !cycle;
-            System.out.println("switched to: " + cycle);
+            Log.info(bundle.get("commands.cycle.switch") + cycle);
         });
-        
-        handler.register("mines", "enable/disable mines on map", args -> {
+
+        handler.register("mines",bundle.get("commands.mines.description"), args -> {
             mines = !mines;
-            System.out.println("switched to: " + mines);
+            Log.info(bundle.get("commands.mines.switch") + mines);
         });
-        
-        handler.register("debug", "fuck me", args -> {
+
+        handler.register("debug",bundle.get("commands.debug.description"), args -> {
             debug = !debug;
+            Log.info(bundle.get("commands.debug.start"));
         });
     }
 
@@ -272,7 +315,7 @@ public class Main extends Plugin {
 
         for (Tile tile : Vars.world.tiles) /* place walls on floor */ {
             if (tile.floor() == (Floor) Blocks.metalFloor5) {
-                tile.setNet(Mathf.random(0, 100) > 30 ? Mathf.random(0,100) > 30 ? Blocks.thoriumWall : Blocks.surgeWall : Blocks.plastaniumWall, Team.get(947), 0); // My love Number :Ç
+                tile.setNet(Mathf.random(0, 100) > 30 ? Mathf.random(0, 100) > 30 ? Blocks.thoriumWall : Blocks.surgeWall : Blocks.plastaniumWall, Team.get(947), 0); // My love Number :ï¿½
             }
             if (mines) {
                 if (tile.block() == Blocks.air && Mathf.random(100) > 98) {

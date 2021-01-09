@@ -14,6 +14,8 @@ import mindustry.gen.Nulls;
 import mindustry.gen.Player;
 import mindustry.gen.Unit;
 
+import static mind_go.Main.bundle;
+
 /**
  *
  * @author Xusk
@@ -42,7 +44,7 @@ public class GameLogic {
                     gameOver = false;
                     unitSpawned = false;
                     if (Main.debug) {
-                        System.out.println("go from GameLogic");
+                        Log.info(bundle.get("debug.logic"));
                     }
                     Lobby.go();
                 }
@@ -76,13 +78,13 @@ public class GameLogic {
     }
 
     public static void gameOver(Team team) {
-        String text = "Winner Team is: ";
+        String text = bundle.get("game.win");
         if (team == Team.sharded) {
-            text += "[orange]Orange";
+            text += bundle.get("game.team.sharded");
         } else if (team == Team.blue) {
-            text += "[blue]Blue";
+            text += bundle.get("game.team.blue");
         } else /* no Winner Team*/ {
-            text = "[gray]No Winner Team";
+            text = bundle.get("game.nowin");
         }
 
         // DEBUG
