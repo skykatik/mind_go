@@ -1,5 +1,6 @@
 package mind_go;
 
+import Events.EventState;
 import arc.graphics.Color;
 import arc.math.Mathf;
 import arc.struct.Seq;
@@ -7,7 +8,6 @@ import arc.util.Log;
 import mindustry.Vars;
 
 import static mind_go.Main.bundle;
-import static mindustry.Vars.bufferSize;
 import static mindustry.Vars.state;
 import mindustry.content.Blocks;
 import mindustry.content.Items;
@@ -79,11 +79,18 @@ public class Lobby {
         // Switched To Night?
         Main.rules.lighting = false;
         Main.rules.enemyLights = true;
-        Main.cycle = Mathf.random(100) > 10;
+        EventState.cycle = Mathf.random(100) > 10;
 
         // Mines
-        Main.mines = Mathf.random(100) > 70;
-
+        EventState.mines = Mathf.random(100) > 70;
+        
+        // Meat 
+        EventState.meat = Mathf.random(0, 100) > 90;
+        
+        if (EventState.meat) {
+            Type.tier = 4;
+        }
+        
         // Add Players In 'players' Seq
         Seq<Player> players = new Seq<>();
 
@@ -125,9 +132,9 @@ public class Lobby {
         Lobby.inLobby = false;
 
         // Day Night Cycle
-        if (!Main.cycle) {
+        if (!EventState.cycle) {
             Main.rules.lighting = true;
-            Main.rules.ambientLight = new Color(0, 0, 0, 1);
+            Main.rules.ambientLight = new Color(0.4f, 0.4f, 0.4f, 1);
             Main.rules.enemyLights = false;
         } else {
             Main.rules.lighting = false;
@@ -172,11 +179,25 @@ public class Lobby {
         // Get Random Map
         Map map = Vars.maps.getNextMap(Gamemode.survival, Vars.state.map);
         // Try To Load Map Again If Map Name Equals Shop
-        if (map != null && map.name().equals("Lobby")) {
+        if (map != null && (map.name().equals("lobby") || map.name().equals("Lobby"))) {
             // Haha Let's GO Start Again
             //System.out.println("FUCK LOBBY");
             return loadRandomMap();
         }
+        if (!EventState.meat) {
+            if (Type.tier <= 2 && (map.width > 100 || map.height > 100)) {
+                return loadRandomMap();
+            }
+
+            if (Type.tier >= 3 && (map.width < 100 || map.height < 100)) {
+                return loadRandomMap();
+            }
+        } else {
+            if (map.width > 75 || map.height > 75) {
+                return loadRandomMap();
+            } 
+        }
+
         return map;
     }
 
@@ -188,11 +209,14 @@ public class Lobby {
                 + bundle.get("lobby.author") + nextMap.author()
                 + bundle.get("lobby.mapsize") + nextMap.width + ":" + nextMap.height;
 
-        if (!Main.cycle) {
-            text += bundle.get("lobby.night");
+        if (!EventState.cycle) {
+            text += bundle.get("event.night");
         }
-        if (Main.mines) {
-            text += bundle.get("lobby.mines");
+        if (EventState.mines) {
+            text += bundle.get("event.mines");
+        }
+        if (EventState.meat) {
+            text += bundle.get("event.meat");
         }
 
         Call.label(player.con, text, 99999, centreX, centreY);
@@ -231,11 +255,11 @@ public class Lobby {
                 Payloadc s = (Payloadc) unit;
                 s.addPayload(new BuildPayload(Blocks.thoriumReactor, unit.team));
             }
-            
+
             if (Type.tier == 0 && room.classa == Class.Spiders) /* Crawler With Blast Compound */ {
                 unit.addItem(Items.blastCompound, unit.type.itemCapacity);
             }
-            
+
             unit.add();
             room.unit = unit;
         }

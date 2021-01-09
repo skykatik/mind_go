@@ -25,7 +25,7 @@ public class Type {
     }
     
     public static int changeTier() /* return not repeated tier */ {
-        int ttier = Mathf.random(0, 5);
+        int ttier = Mathf.random(0, 4);
         if (ttier == oldTier) return changeTier();
         return ttier;
     }

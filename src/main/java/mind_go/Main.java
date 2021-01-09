@@ -1,5 +1,6 @@
 package mind_go;
 
+import Events.EventState;
 import arc.Events;
 import arc.files.Fi;
 import arc.graphics.Color;
@@ -52,8 +53,6 @@ public class Main extends Plugin {
 
     public static boolean debug = false,
             loaded = false,
-            mines = true,
-            cycle = true,
             timerSeted = false,
             worldLoaded = false;
 
@@ -235,7 +234,7 @@ public class Main extends Plugin {
 
     }
 
-    // TODO: do sothing with that lol
+    // TODO: do something with that lol
     @Override
     public void registerClientCommands(CommandHandler handler) {
 
@@ -275,13 +274,13 @@ public class Main extends Plugin {
         });
 
         handler.register("cycle", bundle.get("commands.cycle.description"), args -> {
-            cycle = !cycle;
-            Log.info(bundle.get("commands.cycle.switch") + cycle);
+            EventState.cycle = !EventState.cycle;
+            Log.info(bundle.get("commands.cycle.switch") + EventState.cycle);
         });
 
         handler.register("mines", bundle.get("commands.mines.description"), args -> {
-            mines = !mines;
-            Log.info(bundle.get("commands.mines.switch") + mines);
+            EventState.mines = !EventState.mines;
+            Log.info(bundle.get("commands.mines.switch") + EventState.mines);
         });
 
         handler.register("debug", bundle.get("commands.debug.description"), args -> {
@@ -314,7 +313,7 @@ public class Main extends Plugin {
             if (tile.floor() == (Floor) Blocks.metalFloor5) {
                 tile.setNet(Mathf.random(0, 100) > 30 ? Mathf.random(0, 100) > 30 ? Blocks.thoriumWall : Blocks.surgeWall : Blocks.plastaniumWall, Team.get(947), 0); // My love Number :�
             }
-            if (mines) {
+            if (EventState.mines) {
                 if (tile.block() == Blocks.air && Mathf.random(100) > 98) {
                     tile.setNet(Blocks.shockMine, Team.get(947), 0);
                 }
