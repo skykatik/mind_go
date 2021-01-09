@@ -281,13 +281,13 @@ public class Main extends Plugin {
         });
 
         handler.register("cycle", bundle.get("commands.cycle.description"), args -> {
-            EventState.cycle = !EventState.cycle;
-            Log.info(bundle.get("commands.cycle.switch") + EventState.cycle);
+            EventState.consoleCycle = !EventState.consoleCycle;
+            Log.info(bundle.get("commands.cycle.switch") + EventState.consoleCycle);
         });
 
         handler.register("mines", bundle.get("commands.mines.description"), args -> {
-            EventState.mines = !EventState.mines;
-            Log.info(bundle.get("commands.mines.switch") + EventState.mines);
+            EventState.consoleMines = !EventState.consoleMines;
+            Log.info(bundle.get("commands.mines.switch") + EventState.consoleMines);
         });
 
         handler.register("debug", bundle.get("commands.debug.description"), args -> {

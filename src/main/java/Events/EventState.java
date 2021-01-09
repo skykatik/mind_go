@@ -14,5 +14,10 @@ public class EventState {
             mines = false,
             meat = false,
             wateronly = true,
+            boss = false,
             cycle = false;
+    
+    public static boolean 
+            consoleMines = false,
+            consoleCycle = false;
 }

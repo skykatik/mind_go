@@ -79,10 +79,10 @@ public class Lobby {
         // Switched To Night?
         Main.rules.lighting = false;
         Main.rules.enemyLights = true;
-        EventState.cycle = Mathf.random(100) > 10;
+        EventState.cycle = Mathf.random(100) > 10 || EventState.consoleCycle;
 
         // Mines
-        EventState.mines = Mathf.random(100) > 70;
+        EventState.mines = Mathf.random(100) > 70 || EventState.mines;
         
         // Meat 
         EventState.meat = Mathf.random(0, 100) > 50;
