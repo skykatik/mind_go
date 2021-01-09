@@ -16,7 +16,6 @@ import mindustry.content.UnitTypes;
 import mindustry.core.GameState;
 import mindustry.game.EventType;
 import mindustry.game.Rules;
-import mindustry.game.Team;
 import mindustry.gen.*;
 import mindustry.maps.Map;
 import mindustry.mod.Plugin;
@@ -31,6 +30,9 @@ import java.util.HashMap;
 import java.util.Objects;
 
 import static mindustry.Vars.*;
+import mindustry.content.Fx;
+import mindustry.entities.Damage;
+import mindustry.game.Team;
 
 public class Main extends Plugin {
 
@@ -97,11 +99,10 @@ public class Main extends Plugin {
         rules.blockDamageMultiplier = 0.1f;
         rules.blockHealthMultiplier = 4f;
         rules.canGameOver = false;
-
         // Rules Stuff Initialize
         Call.setRules(Vars.state.rules);
-        // Rules Stuff End
 
+        // Rules Stuff End
         // Update Trigger
         Events.on(EventType.Trigger.update.getClass(), event -> {
             // Timer oh no
@@ -153,6 +154,13 @@ public class Main extends Plugin {
                         text = bundle.get("game.timer") + (int) ((gameTimer - timer) / 60) + bundle.get("game.health") + health + "%";
                         if (health < 6) {
                             player.unit().kill();
+                        }
+                        if (EventState.boss) {
+                            if (!data.get(player).isBoss && PlayerData.boss != null) {
+                                text += bundle.get("event.boss.health") + (int) (100 - ((PlayerData.boss.player.unit().maxHealth - PlayerData.boss.player.unit().health) / (PlayerData.boss.player.unit().maxHealth / 100))) + "%";
+                            } else if (data.get(player).isBoss) {
+                                text += bundle.get("event.boss.damage");
+                            }
                         }
                         if (player.unit() instanceof Mechc && player.unit().isFlying()) /* If unit fly then they get Danger Hud */ {
                             text += bundle.get("game.fly");
@@ -207,6 +215,11 @@ public class Main extends Plugin {
 
         // Player unjoin
         Events.on(EventType.PlayerLeave.class, event -> {
+            PlayerData dat = data.get(event.player);
+            if (!Lobby.inLobby && dat.unita != null && dat.unita.health > 0) {
+                dat.unita.kill();
+                Call.label(event.player.name() + bundle.get("game.out"), 2, event.player.getX(), event.player.getY());
+            }
             data.remove(event.player);
         });
 
@@ -224,18 +237,39 @@ public class Main extends Plugin {
                     map.tags.put("hasLiquid", "false");
                 }
 
-                if (map.name().startsWith("water_only_")) {
-                    map.tags.put("waterOnly", "true");
-                } else {
-                    map.tags.put("waterOnly", "false");
+                // Set Only if map start from type_only_
+                for (String only : EventState.onlys) {
+                    if (map.name().startsWith(only)) {
+                        map.tags.put(only, "true");
+                    } else {
+                        map.tags.put(only, "false");
+                    }
                 }
             }
         });
 
+        Events.on(EventType.BlockDestroyEvent.class, event -> {
+            if (event.tile.block() == Blocks.thoriumReactor) {
+                Damage.damage(event.tile.team(), event.tile.drawx(), event.tile.drawy(), 10 * Vars.tilesize, 200);
+                Call.effect(Fx.nuclearShockwave, event.tile.drawx(), event.tile.drawy(), 0, Color.white);
+            }
+        });
+        
+        Events.on(EventType.UnitDestroyEvent.class, event -> {
+            if (event.unit.isPlayer()) {
+                Call.label(event.unit.getPlayer().name + bundle.get("game.dead"), 3, event.unit.x, event.unit.y);
+            }
+            if (event.unit.type == UnitTypes.oct) {
+                for (int i = 0; i < 8; i++) {
+                    Call.createBullet(UnitTypes.vela.weapons.get(0).bullet, event.unit.team, event.unit.x, event.unit.y, i * 45f, 100, 9999, 100);
+                }
+            }
+        });
     }
 
     // TODO: do something with that lol
     @Override
+
     public void registerClientCommands(CommandHandler handler) {
 
     }
@@ -271,6 +305,7 @@ public class Main extends Plugin {
                     + bundle.get("commands.info.inlobby") + Lobby.inLobby
                     + bundle.get("commands.info.nmap") + Lobby.nextMap.name()
             );
+            Call.sendMessage(appName);
         });
 
         handler.register("events", bundle.get("commands.event.description"), args -> {
@@ -348,13 +383,18 @@ public class Main extends Plugin {
         UnitTypes.mace.health = 500 * 1.7f;
         UnitTypes.fortress.health = 790 * 2;
         UnitTypes.corvus.health = 18000 * 2;
-        UnitTypes.toxopid.health = 22000 / 1.5f;
-        UnitTypes.mono.health = 1000f;
+        UnitTypes.toxopid.health = 22000 / 1.2f;
+        UnitTypes.mono.health = 100f;
+        UnitTypes.oct.health = 10000;
         // Remove Unit Abilities
         UnitTypes.nova.abilities.clear();
         UnitTypes.pulsar.abilities.clear();
         UnitTypes.quasar.abilities.clear();
         UnitTypes.omura.abilities.clear();
+        UnitTypes.bryde.abilities.clear();
+        UnitTypes.minke.abilities.clear();
+        UnitTypes.oct.abilities.clear();
+        rules.reactorExplosions = false;
     }
 
     public void debug() {

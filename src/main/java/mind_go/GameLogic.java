@@ -5,6 +5,8 @@
  */
 package mind_go;
 
+import Events.EventState;
+import arc.math.Mathf;
 import arc.util.Log;
 import mindustry.game.Team;
 import mindustry.gen.Call;
@@ -43,7 +45,6 @@ public class GameLogic {
                     gameOver(winnerTeam);
                     once = false;
                 }
-
                 if (timer > gameOverTimer && !Lobby.inLobby) /* go to lobby when time out */ {
                     timer = 0;
                     gameOver = false;
@@ -56,6 +57,13 @@ public class GameLogic {
             } else /* set when not gameOver */ {
                 once = true;
             }
+            
+            if (EventState.boss) {
+                if (PlayerData.boss != null) {
+                    PlayerData.boss.player.unit().damagePierce(PlayerData.boss.player.unit().maxHealth / 1000 / 9f);
+                }
+            }
+            
             if (Groups.unit.size() > 0) {
                 boolean end = true;
                 Team lastTeam = Groups.unit.index(0).team;
@@ -63,6 +71,9 @@ public class GameLogic {
                     Team team = unit.team;
                     if (unit.isFlying()) {
                         unit.damagePierce(unit.maxHealth / 1000 / (unit instanceof Mechc ? 4f : 8f));
+                        if(unit.type == UnitTypes.mono && unit.item() != Items.thorium) {
+                            unit.kill();
+                        }
                     }
                     if (team != lastTeam) {
                         end = false;
@@ -100,40 +111,58 @@ public class GameLogic {
         Call.infoMessage(text);
     }
 
-    /**
-     *
-     * @param sx sharded core x
-     * @param sy sharded core y
-     * @param bx blue core x
-     * @param by blue core y
-     */
     public static void start(float sx, float sy, float bx, float by) {
+        if (EventState.boss) {
+            selectBoss();
+        }
         for (Player player : Groups.player) {
             player.unit(Nulls.unit);
+            // Team
+            Team team;
             // Get Data From Hash Map
             PlayerData data = Main.data.get(player);
-            // Team Changer 
-            teamID = -teamID;
-            // Pick Team
-            Team team = teamID > 0 ? Team.sharded : Team.blue;
+            if (!EventState.boss) {
+                // Team Changer 
+                teamID = -teamID;
+                // Pick Team
+                team = teamID > 0 ? Team.sharded : Team.blue;
+            } else {
+                if (data.isBoss) {
+                    team = Team.blue;
+                } else {
+                    team = Team.sharded;
+                }
+            }
+
             // Create Unit
-            Unit unit = Type.get(data.unit).create(team);
+            Unit unit;
+            if (!EventState.boss) {
+                unit = Type.get(data.unit).create(team);
+            } else {
+                if (data.isBoss) {
+                    unit = Type.get(data.unit, Type.tier + 1).create(team);
+                } else {
+                    unit = Type.get(data.unit).create(team);
+                }
+            }
             // Set Unit to core position
             unit.set(unit.team() == Team.sharded ? sx : bx, unit.team() == Team.sharded ? sy : by);
-            
-            // Add Thorium Reactor to mono
-            if (Type.tier == 0 && data.unit == Class.AirSupport) /* Mono With Thorium Reactor */ {
-                unit.type = UnitTypes.mono;
-                unit.addItem(Items.thorium, unit.type.itemCapacity);
 
-                Payloadc s = (Payloadc) unit;
-                s.addPayload(new BuildPayload(Blocks.thoriumReactor, unit.team));
+            // Add Thorium Reactor to mono
+            if (Type.tier == 0 && data.unit == Class.AirSupport && !Main.data.get(player).isBoss) /* Mono With Thorium Reactor */ {
+                unit.type = UnitTypes.mono;
+                unit.health = 100f;
+                unit.addItem(Items.thorium, unit.type.itemCapacity);
+                if (unit instanceof Payloadc) {
+                    Payloadc s = (Payloadc) unit;
+                    s.addPayload(new BuildPayload(Blocks.thoriumReactor, unit.team));
+                }
             }
             // Add Blast Compound to crawler
             if (Type.tier == 0 && data.unit == Class.Spiders) /* Crawler With Blast Compound */ {
                 unit.addItem(Items.blastCompound, unit.type.itemCapacity);
             }
-            
+
             player.team(team);
             // Add Unit
             unit.add();
@@ -142,5 +171,15 @@ public class GameLogic {
             player.unit(unit);
         }
         unitSpawned = true;
+    }
+
+    public static void selectBoss() {
+        if (Groups.player.size() > 0) {
+            Player p = Groups.player.index(Mathf.random(Groups.player.size() - 1));
+            PlayerData dat = Main.data.get(p);
+            dat.isBoss = true;
+            PlayerData.boss = dat;
+            Call.sendMessage(dat.player.name() + bundle.get("event.boss.fight"));
+        }
     }
 }

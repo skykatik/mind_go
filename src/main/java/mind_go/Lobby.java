@@ -45,8 +45,13 @@ public class Lobby {
 
     public static void update() {
         for (Player player : Groups.player) {
+            Class unit = EventState.wateronly ? Class.Naval : EventState.aironly ? Class.Air : Class.Main; 
             String text = bundle.get("lobby.nopick");
             for (Room room : rooms) {
+                if (unit == room.classa) {
+                    Main.data.get(player).unit = unit;
+                    text = bundle.get("lobby.default") + room.name;
+                }
                 if (room.check(player) && room.active) /* Check Player In Room */ {
                     text = bundle.get("lobby.pick") + room.name;
                     Main.data.get(player).unit = room.classa;
@@ -70,8 +75,10 @@ public class Lobby {
 
         // Set LobbyState to in Lobby
         Main.timer = 0;
+        PlayerData.resetValues();
         Lobby.inLobby = true;
 
+        // Events Region 
         // Update GameTier
         Type.oldTier = Type.tier;
         Type.tier = Type.changeTier();
@@ -79,18 +86,26 @@ public class Lobby {
         // Switched To Night?
         Main.rules.lighting = false;
         Main.rules.enemyLights = true;
-        EventState.cycle = Mathf.random(100) > 10 || EventState.consoleCycle;
+        EventState.cycle = Mathf.random(100) > 40 || EventState.consoleCycle;
 
         // Mines
         EventState.mines = Mathf.random(100) > 70 || EventState.mines;
-        
+
+        // Boss
+        EventState.boss = Mathf.random(0, 100) > 80;
+
+        if (EventState.boss) {
+            Type.tier = Mathf.random(0, 3);
+        }
+
         // Meat 
-        EventState.meat = Mathf.random(0, 100) > 50;
-        
+        EventState.meat = Mathf.random(0, 100) > 80 && !EventState.boss;
+
         if (EventState.meat) {
             Type.tier = 4;
         }
-        
+
+        // Events Region End 
         // Add Players In 'players' Seq
         Seq<Player> players = new Seq<>();
 
@@ -184,18 +199,10 @@ public class Lobby {
             //System.out.println("FUCK LOBBY");
             return loadRandomMap();
         }
-        if (!EventState.meat) {
-            if (Type.tier <= 2 && (map.width > 100 || map.height > 100)) {
-                return loadRandomMap();
-            }
-
-            if (Type.tier >= 3 && (map.width < 100 || map.height < 100)) {
-                return loadRandomMap();
-            }
-        } else {
+        if (EventState.meat) {
             if (map.width > 75 || map.height > 75) {
                 return loadRandomMap();
-            } 
+            }
         }
 
         return map;
@@ -218,10 +225,14 @@ public class Lobby {
         if (EventState.meat) {
             text += bundle.get("event.meat");
         }
-        if (EventState.wateronly) {
-            text += bundle.get("event.wateronly");
+        if (EventState.boss) {
+            text += bundle.get("event.boss.in");
         }
-
+        for (String only : EventState.onlys) {
+            if (nextMap.tags.get(only).equals("true")) {
+                text += bundle.get("only." + only);
+            }
+        }
         Call.label(player.con, text, 99999, centreX, centreY);
         for (Room room : rooms) /* show text in centre room */ {
             String textt = room.active ? "" : bundle.get("lobby.disable"); // that only for WaterRooms xd
@@ -233,13 +244,12 @@ public class Lobby {
     }
 
     public static void spawnUnits() {
-        EventState.wateronly = nextMap.tags.get("waterOnly").equals("true");
         for (Room room : rooms) {
             room.active = true;
             Unit unit = Type.get(room.classa).create(Team.sharded);
             unit.set(room.centreX, room.centreY);
 
-            //Water Units Only
+            // If Map has Water
             if (unit instanceof WaterMovec && nextMap.tags.get("hasLiquid").equals("true")) {
                 unit.tileOn().setFloorNet(Blocks.water);
             } else if (unit instanceof WaterMovec) {
@@ -247,11 +257,27 @@ public class Lobby {
                 continue;
             }
 
-            if ((unit instanceof Mechc || unit instanceof Legsc) && nextMap.tags.get("waterOnly").equals("true")) {
+            // Event Water|Air|Ground Only Region
+            
+            // Water Only
+            if (!(unit instanceof WaterMovec) && nextMap.tags.get("water_only_").equals("true")) {
                 room.active = false;
                 continue;
             }
 
+            // Ground Only
+            if (!(unit instanceof Mechc || unit instanceof Legsc) && nextMap.tags.get("ground_only_").equals("true")) {
+                room.active = false;
+            }
+            
+            // Air Only
+            if ((room.classa != Class.Air || room.classa != Class.AirSupport) && nextMap.tags.get("air_only_").equals("true")) {
+                room.active = false;
+            }
+
+            // Event Water|Air|Ground Only Region End
+            
+            // Unit Region
             if (Type.tier == 0 && room.classa == Class.AirSupport) /* Mono With Thorium Reactor */ {
                 unit.type = UnitTypes.mono;
                 unit.addItem(Items.thorium, unit.type.itemCapacity);
