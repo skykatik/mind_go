@@ -71,9 +71,6 @@ public class GameLogic {
                     Team team = unit.team;
                     if (unit.isFlying()) {
                         unit.damagePierce(unit.maxHealth / 1000 / (unit instanceof Mechc ? 4f : 8f));
-                        if(unit.type == UnitTypes.mono && unit.item() != Items.thorium) {
-                            unit.kill();
-                        }
                     }
                     if (team != lastTeam) {
                         end = false;

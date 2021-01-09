@@ -261,7 +261,7 @@ public class Main extends Plugin {
             }
             if (event.unit.type == UnitTypes.oct) {
                 for (int i = 0; i < 8; i++) {
-                    Call.createBullet(UnitTypes.vela.weapons.get(0).bullet, event.unit.team, event.unit.x, event.unit.y, i * 45f, 100, 9999, 100);
+                    Call.createBullet(UnitTypes.vela.weapons.get(0).bullet, event.unit.team, event.unit.x, event.unit.y, i * 45f, 100, 0, 100);
                 }
             }
         });

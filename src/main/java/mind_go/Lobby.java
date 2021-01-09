@@ -45,13 +45,11 @@ public class Lobby {
 
     public static void update() {
         for (Player player : Groups.player) {
-            Class unit = EventState.wateronly ? Class.Naval : EventState.aironly ? Class.Air : Class.Main; 
+            Class unit = EventState.wateronly ? Class.Naval : EventState.aironly ? Class.Air : Class.Main;
             String text = bundle.get("lobby.nopick");
             for (Room room : rooms) {
-                if (unit == room.classa) {
-                    Main.data.get(player).unit = unit;
-                    text = bundle.get("lobby.default") + room.name;
-                }
+                Main.data.get(player).unit = unit;
+                text = bundle.get("lobby.default") + room.name;
                 if (room.check(player) && room.active) /* Check Player In Room */ {
                     text = bundle.get("lobby.pick") + room.name;
                     Main.data.get(player).unit = room.classa;
@@ -258,7 +256,6 @@ public class Lobby {
             }
 
             // Event Water|Air|Ground Only Region
-            
             // Water Only
             if (!(unit instanceof WaterMovec) && nextMap.tags.get("water_only_").equals("true")) {
                 room.active = false;
@@ -269,14 +266,13 @@ public class Lobby {
             if (!(unit instanceof Mechc || unit instanceof Legsc) && nextMap.tags.get("ground_only_").equals("true")) {
                 room.active = false;
             }
-            
+
             // Air Only
             if ((room.classa != Class.Air || room.classa != Class.AirSupport) && nextMap.tags.get("air_only_").equals("true")) {
                 room.active = false;
             }
 
             // Event Water|Air|Ground Only Region End
-            
             // Unit Region
             if (Type.tier == 0 && room.classa == Class.AirSupport) /* Mono With Thorium Reactor */ {
                 unit.type = UnitTypes.mono;
