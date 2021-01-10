@@ -33,7 +33,7 @@ public class GameLogic {
             teamID = 1,
             timer = 0;
     public static Team winnerTeam = Team.derelict;
-    public static boolean once = false,
+    public static boolean onceGameOver = false,
             unitSpawned = false,
             gameOver = false;
 
@@ -41,9 +41,9 @@ public class GameLogic {
         if (unitSpawned) {
             if (gameOver == true) /* Timer for non instant translate to the lobby */ {
                 timer++;
-                if (once) /* show message with winner team */ {
+                if (onceGameOver) /* show message with winner team */ {
                     gameOver(winnerTeam);
-                    once = false;
+                    onceGameOver = false;
                 }
                 if (timer > gameOverTimer && !Lobby.inLobby) /* go to lobby when time out */ {
                     timer = 0;
@@ -55,12 +55,12 @@ public class GameLogic {
                     Lobby.go();
                 }
             } else /* set when not gameOver */ {
-                once = true;
+                onceGameOver = true;
             }
             
             if (EventState.map.get("boss")) {
                 if (PlayerData.boss != null) {
-                    PlayerData.boss.player.unit().damagePierce(PlayerData.boss.player.unit().maxHealth / 1000 / 9f);
+                    PlayerData.boss.player.unit().damagePierce(PlayerData.boss.player.unit().maxHealth / 1000 / 10f);
                 }
             }
             
@@ -70,7 +70,7 @@ public class GameLogic {
                 for (Unit unit : Groups.unit) {
                     Team team = unit.team;
                     if (unit.isFlying()) {
-                        unit.damagePierce(unit.maxHealth / 1000 / (unit instanceof Mechc ? 4f : 8f));
+                        unit.damagePierce(unit.maxHealth / 1000 / (unit instanceof Mechc ? 4f : 12f));
                     }
                     if (team != lastTeam) {
                         end = false;
@@ -86,6 +86,7 @@ public class GameLogic {
                 winnerTeam = Team.derelict;
                 gameOver = true;
             }
+            
         }
 
     }
@@ -142,18 +143,16 @@ public class GameLogic {
                     unit = Type.get(data.unit).create(team);
                 }
             }
-            // Add Thorium Reactor to mono
-            if (!EventState.map.get("boss")) {
-                unit = Type.get(data.unit).create(team);
+            
+            // Set Unit Position
+            if (EventState.map.get("free_for_all_")) {
+                
             } else {
-                if (data.isBoss) {
-                    unit = Type.get(data.unit, Type.tier + 1).create(team);
-                } else {
-                    unit = Type.get(data.unit).create(team);
-                }
+                unit.set(unit.team() == Team.sharded ? sx : bx, unit.team() == Team.sharded ? sy : by);                
             }
-            // Set Unit to core position
-            unit.set(unit.team() == Team.sharded ? sx : bx, unit.team() == Team.sharded ? sy : by);
+            
+            
+            // Add Thorium Reactor to mono
             if (Type.tier == 0 && data.unit == Class.AirSupport && !Main.data.get(player).isBoss) /* Mono With Thorium Reactor */ {
                 unit.type = UnitTypes.mono;
                 unit.health = 100f;

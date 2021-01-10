@@ -5,6 +5,7 @@ import arc.Events;
 import arc.files.Fi;
 import arc.graphics.Color;
 import arc.math.Mathf;
+import arc.struct.Seq;
 import arc.util.*;
 import arc.util.io.Streams;
 import com.google.gson.*;
@@ -122,6 +123,7 @@ public class Main extends Plugin {
                         }
                     } else /* Game Once */ {
                         initGame();
+                        sync();
                     }
                     afterLoadTimer = 150;
                     loaded = false;
@@ -249,20 +251,22 @@ public class Main extends Plugin {
             }
         });
 
+        // Block Destory Event
         Events.on(EventType.BlockDestroyEvent.class, event -> {
             if (event.tile.block() == Blocks.thoriumReactor) {
                 Damage.damage(event.tile.team(), event.tile.drawx(), event.tile.drawy(), 10 * Vars.tilesize, 200);
                 Call.effect(Fx.nuclearShockwave, event.tile.drawx(), event.tile.drawy(), 0, Color.white);
             }
         });
-        
+
+        // Unit Die Event
         Events.on(EventType.UnitDestroyEvent.class, event -> {
             if (event.unit.isPlayer()) {
                 Call.label(event.unit.getPlayer().name + bundle.get("game.dead"), 3, event.unit.x, event.unit.y);
             }
             if (event.unit.type == UnitTypes.oct) {
                 for (int i = 0; i < 8; i++) {
-                    Call.createBullet(UnitTypes.vela.weapons.get(0).bullet, event.unit.team, event.unit.x, event.unit.y, i * 45f, 100, 0, 100);
+                    Call.createBullet(UnitTypes.vela.weapons.get(0).bullet, event.unit.team, event.unit.x, event.unit.y, i * 45f, 150, 1, 25);
                 }
             }
         });
@@ -311,17 +315,17 @@ public class Main extends Plugin {
 
         handler.register("events", bundle.get("commands.event.description"), args -> {
             String text;
-            
+
             for (String event : EventState.events) {
                 text = "\n" + event + ": " + EventState.map.get(event);
             }
         });
-        
+
         handler.register("event", "event_name", args -> {
             if (EventState.map.get(args[0])) {
-                
+
                 EventState.map.replace(args[0], !EventState.map.get(args[0]));
-                
+
                 Log.info(EventState.map.get(args[0]));
             }
         });
@@ -335,6 +339,38 @@ public class Main extends Plugin {
     public void initGame() {
         float sx = 0, sy = 0, bx = 0, by = 0;
 
+        for (Tile tile : Vars.world.tiles) /* place walls on floor */ {
+            if (tile.floor() == (Floor) Blocks.metalFloor5) {
+                tile.setNet(Mathf.random(0, 100) > 30 ? Mathf.random(0, 100) > 30 ? Blocks.thoriumWall : Blocks.surgeWall : Blocks.plastaniumWall, Team.get(947), 0); // My love Number :�
+            }
+
+            // Mines Event
+            if (EventState.map.get("mines")) {
+                if (tile.block() == Blocks.air && Mathf.random(100) > 98) {
+                    for (Team team : Team.all) {
+                        for (CoreBlock.CoreBuild core : team.cores()) {
+                            if (Mathf.dst(core.getX(), core.getY(), tile.drawx(), tile.drawy()) > Vars.tilesize * 10) {
+                                tile.setNet(Blocks.shockMine, Team.get(947), 0);
+                            }
+                        }
+                    }
+                }
+            }
+
+            // Lava Event
+            if (EventState.map.get("lava")) {
+                if (tile.block() == Blocks.air && Mathf.random(100) > 98) {
+                    for (Team team : Team.all) {
+                        for (CoreBlock.CoreBuild core : team.cores()) {
+                            if (Mathf.dst(core.getX(), core.getY(), tile.drawx(), tile.drawy()) > Vars.tilesize * 10) {
+                                tile.setFloorNet((Floor) Blocks.slag, Blocks.shockMine);
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
         for (CoreBlock.CoreBuild core : Team.blue.cores()) /* destroy blue cores */ {
             bx = core.x;
             by = core.y;
@@ -347,20 +383,6 @@ public class Main extends Plugin {
             core.kill();
         }
 
-        for (Tile tile : Vars.world.tiles) /* place walls on floor */ {
-            if (tile.floor() == (Floor) Blocks.metalFloor5) {
-                tile.setNet(Mathf.random(0, 100) > 30 ? Mathf.random(0, 100) > 30 ? Blocks.thoriumWall : Blocks.surgeWall : Blocks.plastaniumWall, Team.get(947), 0); // My love Number :�
-            }
-            if (EventState.map.get("mines")) {
-                if (tile.block() == Blocks.air && Mathf.random(100) > 98) {
-                    tile.setNet(Blocks.shockMine, Team.get(947), 0);
-                }
-            }
-            // Set map to water if map has a water
-            if (tile.floor().isLiquid) {
-                Vars.state.map.tags.put("hasLiquid", "true");
-            }
-        }
         GameLogic.start(sx, sy, bx, by);
     }
 
@@ -380,6 +402,8 @@ public class Main extends Plugin {
         UnitTypes.fortress.health = 790 * 2;
         UnitTypes.corvus.health = 18000 * 2;
         UnitTypes.toxopid.health = 22000 / 1.2f;
+        UnitTypes.quad.health = 6000 * 1.5f;
+        UnitTypes.horizon.health = 340f * 2;
         UnitTypes.mono.health = 100f;
         UnitTypes.oct.health = 10000;
         // Remove Unit Abilities
@@ -396,6 +420,28 @@ public class Main extends Plugin {
     public void debug() {
         for (Room room : Lobby.rooms) /* Draw Debug Square With Bullets */ {
             room.debugDraw();
+        }
+    }
+
+    public static void sync() {
+        Seq<Player> players = new Seq<>();
+
+        for (Player p : Groups.player) {
+            players.add(p);
+        }
+        // Logic Reset Start
+        Vars.logic.reset();
+
+        // World Data Start
+        Call.worldDataBegin();
+        state.rules = Main.rules.copy();
+        // World Data End
+
+        // Logic Reset End
+        Vars.logic.play();
+        
+        for (Player p : players) {
+            Vars.netServer.sendWorldData(p);
         }
     }
 }

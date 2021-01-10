@@ -78,12 +78,13 @@ public class Lobby {
         PlayerData.resetValues();
         Lobby.inLobby = true;
 
-        // Events Region 
-        EventState.generate(Mathf.random(3));
         
         // Update GameTier
         Type.oldTier = Type.tier;
         Type.tier = Type.changeTier();
+        
+        // Events Region 
+        EventState.generate(Mathf.random(3));
 
         // Switched To Night?
         Main.rules.lighting = false;
@@ -119,7 +120,9 @@ public class Lobby {
         for (Player p : players) {
             Vars.netServer.sendWorldData(p);
         }
-
+        
+        Call.setRules(Vars.state.rules);
+        
     }
 
     public static void out() {
@@ -204,6 +207,7 @@ public class Lobby {
         EventState.map.replace("water_only_", false);
         EventState.map.replace("air_only_", false);
         EventState.map.replace("ground_only_", false);
+        EventState.map.replace("free_for_all_", false);
         
         for (String event : EventState.events) {
             if (EventState.map.get(event)) {
@@ -220,6 +224,9 @@ public class Lobby {
                         break;
                     case "ground_only_":
                         EventState.map.replace("ground_only_", true);
+                        break;
+                    case "free_for_all_":
+                        EventState.map.replace("free_for_all_", true);
                         break;
                     case "air_only_":
                         EventState.map.replace("air_only_", true);
