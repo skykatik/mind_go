@@ -57,13 +57,13 @@ public class GameLogic {
             } else /* set when not gameOver */ {
                 onceGameOver = true;
             }
-            
+
             if (EventState.map.get("boss")) {
                 if (PlayerData.boss != null) {
                     PlayerData.boss.player.unit().damagePierce(PlayerData.boss.player.unit().maxHealth / 1000 / 10f);
                 }
             }
-            
+
             if (Groups.unit.size() > 0) {
                 boolean end = true;
                 Team lastTeam = Groups.unit.index(0).team;
@@ -71,6 +71,12 @@ public class GameLogic {
                     Team team = unit.team;
                     if (unit.isFlying()) {
                         unit.damagePierce(unit.maxHealth / 1000 / (unit instanceof Mechc ? 4f : 12f));
+                    }
+                    if (unit instanceof Payloadc) {
+                        Payloadc s = (Payloadc) unit;
+                        if (s.payloads().size <= 0) {
+                            unit.damagePierce(unit.maxHealth / 1000 / 0.7f);
+                        }
                     }
                     if (team != lastTeam) {
                         end = false;
@@ -86,7 +92,7 @@ public class GameLogic {
                 winnerTeam = Team.derelict;
                 gameOver = true;
             }
-            
+
         }
 
     }
@@ -139,23 +145,23 @@ public class GameLogic {
             } else {
                 if (data.isBoss) {
                     unit = Type.get(data.unit, Type.tier + 1).create(team);
+                    unit.maxHealth = unit.type.health * (Groups.player.size() / 5);
+                    unit.health = unit.maxHealth;
                 } else {
                     unit = Type.get(data.unit).create(team);
                 }
             }
-            
+
             // Set Unit Position
             if (EventState.map.get("free_for_all_")) {
-                
+
             } else {
-                unit.set(unit.team() == Team.sharded ? sx : bx, unit.team() == Team.sharded ? sy : by);                
+                unit.set(unit.team() == Team.sharded ? sx : bx, unit.team() == Team.sharded ? sy : by);
             }
-            
-            
+
             // Add Thorium Reactor to mono
             if (Type.tier == 0 && data.unit == Class.AirSupport && !Main.data.get(player).isBoss) /* Mono With Thorium Reactor */ {
                 unit.type = UnitTypes.mono;
-                unit.health = 100f;
                 unit.addItem(Items.thorium, unit.type.itemCapacity);
                 if (unit instanceof Payloadc) {
                     Payloadc s = (Payloadc) unit;
@@ -175,7 +181,12 @@ public class GameLogic {
             data.unita = unit;
             player.unit(unit);
         }
+        
         unitSpawned = true;
+    }
+    
+    public static void start() {
+        start(Main.sx, Main.sy, Main.bx, Main.by);
     }
 
     public static void selectBoss() {

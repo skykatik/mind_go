@@ -10,9 +10,6 @@ import arc.math.Mathf;
 import java.util.HashMap;
 import mind_go.Main;
 import mind_go.Type;
-import mindustry.Vars;
-import mindustry.content.Weathers;
-import mindustry.type.Weather;
 
 /**
  *
@@ -34,7 +31,7 @@ public class EventState {
         
         "mines", "lava", 
         
-        "boss", "meat", "freeforall"
+        "boss", "meat"
     };
     
     public static void init() {
@@ -47,7 +44,7 @@ public class EventState {
         int current = 0;
         
         for (String event : events) {
-            map.replace(event, false);
+            map.put(event, false);
         }
         
         for (String event : events) {
@@ -58,14 +55,14 @@ public class EventState {
             }
             
             // Floors
-            if (event.equals("lava") && map.get("mines")) continue;
+            if (event.equals("lava") && EventState.map.get("mines")) continue;
             
             // Game Events
             if (event.equals("meat") && EventState.map.get("boss")) continue;
             
-            if (Mathf.random(0, 100) > 70) {
+            if (Mathf.random(0, 100) > 65) {
+                map.put(event, true);
                 current++;
-                map.replace(event, true);
             }
             
             if (current >= maxEvents) return;
@@ -80,13 +77,5 @@ public class EventState {
             Main.rules.enemyLights = false;
             Main.rules.ambientLight = new Color(0, 0, 0, Mathf.random(0.7f, 1f));
         }
-        
-        if (map.get("rain")) {
-            Main.rules.weather.add(new Weather.WeatherEntry(Weathers.rain));
-        }
-        
-        map.replace("mines", true);
-        
-            
     }
 }

@@ -32,6 +32,7 @@ import java.util.Objects;
 
 import static mindustry.Vars.*;
 import mindustry.content.Fx;
+import mindustry.content.Weathers;
 import mindustry.entities.Damage;
 import mindustry.game.Team;
 
@@ -60,6 +61,7 @@ public class Main extends Plugin {
             worldLoaded = false;
 
     public static Rules rules = new Rules();
+    public static float sx, sy, bx, by;
 
     public Main() {
 
@@ -122,8 +124,8 @@ public class Main extends Plugin {
                             debug();
                         }
                     } else /* Game Once */ {
-                        initGame();
-                        sync();
+                        killCores();
+                        GameLogic.start();
                     }
                     afterLoadTimer = 150;
                     loaded = false;
@@ -155,6 +157,7 @@ public class Main extends Plugin {
                         String text;
                         int health = (int) (100 - ((player.unit().maxHealth - player.unit().health) / (player.unit().maxHealth / 100)));
                         text = bundle.get("game.timer") + (int) ((gameTimer - timer) / 60) + bundle.get("game.health") + health + "%";
+                        text += bundle.get("game.team") + (player.team() == Team.sharded ? bundle.get("game.team.sharded") : bundle.get("game.team.blue"));
                         if (health < 6) {
                             player.unit().kill();
                         }
@@ -163,6 +166,12 @@ public class Main extends Plugin {
                                 text += bundle.get("event.boss.health") + (int) (100 - ((PlayerData.boss.player.unit().maxHealth - PlayerData.boss.player.unit().health) / (PlayerData.boss.player.unit().maxHealth / 100))) + "%";
                             } else if (data.get(player).isBoss) {
                                 text += bundle.get("event.boss.damage");
+                            }
+                        }
+                        if (player.unit() instanceof Payloadc) {
+                            Payloadc s = (Payloadc) player.unit();
+                            if (s.payloads().size <= 0) {
+                                text += bundle.get("game.reactor");
                             }
                         }
                         if (player.unit() instanceof Mechc && player.unit().isFlying()) /* If unit fly then they get Danger Hud */ {
@@ -191,12 +200,14 @@ public class Main extends Plugin {
 
         // World Load
         Events.on(EventType.WorldLoadEvent.class, event -> {
-            clearOre();
-
-            // SetDefaultVariable
+            // Set Values to Default
             timerSeted = false;
             loaded = true;
             worldLoaded = true;
+            clearOre();
+            if (!Lobby.inLobby) {
+                initGame();
+            }
         });
 
         // Player Join
@@ -214,6 +225,10 @@ public class Main extends Plugin {
                     }
                 }
             }
+        });
+
+        Events.on(EventType.BlockBuildEndEvent.class, event -> {
+            Log.info(event.tile.build);
         });
 
         // Player unjoin
@@ -266,7 +281,7 @@ public class Main extends Plugin {
             }
             if (event.unit.type == UnitTypes.oct) {
                 for (int i = 0; i < 8; i++) {
-                    Call.createBullet(UnitTypes.vela.weapons.get(0).bullet, event.unit.team, event.unit.x, event.unit.y, i * 45f, 150, 1, 25);
+                    Call.createBullet(UnitTypes.vela.weapons.get(0).bullet, event.unit.team, event.unit.x, event.unit.y, i * 45f, 150, 1, 15);
                 }
             }
         });
@@ -314,20 +329,35 @@ public class Main extends Plugin {
         });
 
         handler.register("events", bundle.get("commands.event.description"), args -> {
-            String text;
+            String text = "";
 
             for (String event : EventState.events) {
-                text = "\n" + event + ": " + EventState.map.get(event);
+                text += "\n" + event + ": " + EventState.map.get(event);
             }
+            Log.info(text);
+
         });
 
-        handler.register("event", "event_name", args -> {
-            if (EventState.map.get(args[0])) {
+        handler.register("event", "<event>", "event_name", args -> {
+            if (args.length > 0) {
+                for (String event : EventState.events) {
+                    if (event.equals(args[0])) {
+                        EventState.map.put(args[0], !EventState.map.get(args[0]));
 
-                EventState.map.replace(args[0], !EventState.map.get(args[0]));
-
-                Log.info(EventState.map.get(args[0]));
+                        Call.sendMessage("[red][SERVER] " + bundle.get("commands.event.enable") + " : " + bundle.get("event." + event));
+                        Log.info(EventState.map.get(args[0]));
+                        return;
+                    }
+                }
+                Log.info("can't find: " + args[0]);
             }
+        });
+        
+        handler.register("tier", "add 1 to tier", args -> {
+            Type.tier++;
+            if (Type.tier > 4) Type.tier = 0;
+            Call.sendMessage("[red][SERVER] " + "change tier to"+ " : " + (Type.tier + 1));
+            Log.info("current tier now: " + Type.tier);
         });
     }
 
@@ -336,9 +366,7 @@ public class Main extends Plugin {
 
     }
 
-    public void initGame() {
-        float sx = 0, sy = 0, bx = 0, by = 0;
-
+    public static void initGame() {
         for (Tile tile : Vars.world.tiles) /* place walls on floor */ {
             if (tile.floor() == (Floor) Blocks.metalFloor5) {
                 tile.setNet(Mathf.random(0, 100) > 30 ? Mathf.random(0, 100) > 30 ? Blocks.thoriumWall : Blocks.surgeWall : Blocks.plastaniumWall, Team.get(947), 0); // My love Number :�
@@ -363,14 +391,28 @@ public class Main extends Plugin {
                     for (Team team : Team.all) {
                         for (CoreBlock.CoreBuild core : team.cores()) {
                             if (Mathf.dst(core.getX(), core.getY(), tile.drawx(), tile.drawy()) > Vars.tilesize * 10) {
-                                tile.setFloorNet((Floor) Blocks.slag, Blocks.shockMine);
+                                tile.setFloorNet((Floor) Blocks.slag);
                             }
                         }
                     }
                 }
             }
-        }
 
+        }
+        if (EventState.map.get("rain")) {
+            Call.createWeather(Weathers.rain, Mathf.random(0.5f, 2f), 10000, 3, 3);
+        }
+    }
+
+    public void clearOre() {
+        for (Tile tile : Vars.world.tiles) {
+            if (tile.overlay() instanceof OreBlock) /* clear ores */ {
+                tile.setOverlay(Blocks.air);
+            }
+        }
+    }
+
+    public void killCores() {
         for (CoreBlock.CoreBuild core : Team.blue.cores()) /* destroy blue cores */ {
             bx = core.x;
             by = core.y;
@@ -382,16 +424,6 @@ public class Main extends Plugin {
             sy = core.y;
             core.kill();
         }
-
-        GameLogic.start(sx, sy, bx, by);
-    }
-
-    public void clearOre() {
-        for (Tile tile : Vars.world.tiles) {
-            if (tile.overlay() instanceof OreBlock) /* clear ores */ {
-                tile.setOverlay(Blocks.air);
-            }
-        }
     }
 
     public void initStats() {
@@ -402,14 +434,15 @@ public class Main extends Plugin {
         UnitTypes.fortress.health = 790 * 2;
         UnitTypes.corvus.health = 18000 * 2;
         UnitTypes.toxopid.health = 22000 / 1.2f;
-        UnitTypes.quad.health = 6000 * 1.5f;
+        UnitTypes.quad.health = 6000 * 2f;
         UnitTypes.horizon.health = 340f * 2;
-        UnitTypes.mono.health = 100f;
+        UnitTypes.mega.health = 360 * 1.5f;
         UnitTypes.oct.health = 10000;
         // Remove Unit Abilities
         UnitTypes.nova.abilities.clear();
         UnitTypes.pulsar.abilities.clear();
         UnitTypes.quasar.abilities.clear();
+        UnitTypes.poly.abilities.clear();
         UnitTypes.omura.abilities.clear();
         UnitTypes.bryde.abilities.clear();
         UnitTypes.minke.abilities.clear();
@@ -420,28 +453,6 @@ public class Main extends Plugin {
     public void debug() {
         for (Room room : Lobby.rooms) /* Draw Debug Square With Bullets */ {
             room.debugDraw();
-        }
-    }
-
-    public static void sync() {
-        Seq<Player> players = new Seq<>();
-
-        for (Player p : Groups.player) {
-            players.add(p);
-        }
-        // Logic Reset Start
-        Vars.logic.reset();
-
-        // World Data Start
-        Call.worldDataBegin();
-        state.rules = Main.rules.copy();
-        // World Data End
-
-        // Logic Reset End
-        Vars.logic.play();
-        
-        for (Player p : players) {
-            Vars.netServer.sendWorldData(p);
         }
     }
 }

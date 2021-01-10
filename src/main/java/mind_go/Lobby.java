@@ -84,7 +84,7 @@ public class Lobby {
         Type.tier = Type.changeTier();
         
         // Events Region 
-        EventState.generate(Mathf.random(3));
+        EventState.generate(Mathf.random(4));
 
         // Switched To Night?
         Main.rules.lighting = false;
@@ -135,11 +135,7 @@ public class Lobby {
         Lobby.inLobby = false;
 
         // Day Night Cycle
-        if (!EventState.map.get("cycle")) {
-            Main.rules.lighting = true;
-            Main.rules.ambientLight = new Color(0, 0, 0, 0.7f);
-            Main.rules.enemyLights = false;
-        } else {
+        if (EventState.map.get("cycle")) {
             Main.rules.lighting = false;
             Main.rules.ambientLight = new Color(1, 1, 1, 1);
             Main.rules.enemyLights = true;
@@ -165,7 +161,7 @@ public class Lobby {
 
         // Logic Reset End
         Vars.logic.play();
-
+        
         // Send World Data To All Players
         for (Player p : players) {
             Vars.netServer.sendWorldData(p);
