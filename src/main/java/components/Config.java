@@ -2,5 +2,5 @@ package components;
 
 public class Config {
 
-    public String locale = "ru_RU";
+    public String locale = "en_EN";
 }

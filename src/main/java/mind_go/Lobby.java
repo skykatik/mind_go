@@ -45,7 +45,7 @@ public class Lobby {
 
     public static void update() {
         for (Player player : Groups.player) {
-            Class unit = EventState.wateronly ? Class.Naval : EventState.aironly ? Class.Air : Class.Main;
+            Class unit = EventState.map.get("water_only_") ? Class.Naval : EventState.map.get("air_only_") ? Class.Air : Class.Main;
             String text = bundle.get("lobby.nopick");
             for (Room room : rooms) {
                 if (unit == room.classa && room.active) {
@@ -79,6 +79,8 @@ public class Lobby {
         Lobby.inLobby = true;
 
         // Events Region 
+        EventState.generate(Mathf.random(3));
+        
         // Update GameTier
         Type.oldTier = Type.tier;
         Type.tier = Type.changeTier();
@@ -86,24 +88,7 @@ public class Lobby {
         // Switched To Night?
         Main.rules.lighting = false;
         Main.rules.enemyLights = true;
-        EventState.cycle = Mathf.random(100) > 40 || EventState.consoleCycle;
-
-        // Mines
-        EventState.mines = Mathf.random(100) > 70 || EventState.mines;
-
-        // Boss
-        EventState.boss = Mathf.random(0, 100) > 80;
-
-        if (EventState.boss) {
-            Type.tier = Mathf.random(0, 3);
-        }
-
-        // Meat 
-        EventState.meat = Mathf.random(0, 100) > 80 && !EventState.boss;
-
-        if (EventState.meat) {
-            Type.tier = 4;
-        }
+        
 
         // Events Region End 
         // Add Players In 'players' Seq
@@ -147,7 +132,7 @@ public class Lobby {
         Lobby.inLobby = false;
 
         // Day Night Cycle
-        if (!EventState.cycle) {
+        if (!EventState.map.get("cycle")) {
             Main.rules.lighting = true;
             Main.rules.ambientLight = new Color(0, 0, 0, 0.7f);
             Main.rules.enemyLights = false;
@@ -199,9 +184,9 @@ public class Lobby {
             //System.out.println("FUCK LOBBY");
             return loadRandomMap();
         }
-        if (EventState.meat) {
+        if (EventState.map.get("meat")) {
             if (map.width > 75 || map.height > 75) {
-                return loadRandomMap();
+                loadRandomMap();
             }
         }
 
@@ -215,34 +200,29 @@ public class Lobby {
         String text = bundle.get("lobby.nmap") + nextMap.name()
                 + bundle.get("lobby.author") + nextMap.author()
                 + bundle.get("lobby.mapsize") + nextMap.width + ":" + nextMap.height;
-
-        if (!EventState.cycle) {
-            text += bundle.get("event.night");
+        
+        EventState.map.replace("water_only_", false);
+        EventState.map.replace("air_only_", false);
+        EventState.map.replace("ground_only_", false);
+        
+        for (String event : EventState.events) {
+            if (EventState.map.get(event)) {
+                text += bundle.get("event." + event);
+            }
         }
-        if (EventState.mines) {
-            text += bundle.get("event.mines");
-        }
-        if (EventState.meat) {
-            text += bundle.get("event.meat");
-        }
-        if (EventState.boss) {
-            text += bundle.get("event.boss.in");
-        }
-        EventState.wateronly = false;
-        EventState.groundonly = false;
-        EventState.aironly = false;
+        
         for (String only : EventState.onlys) {
             if (nextMap.tags.get(only).equals("true")) {
-                text += bundle.get("only." + only);
+                text += bundle.get("event." + only);
                 switch (only) {
                     case "water_only_":
-                        EventState.wateronly = true;
+                        EventState.map.replace("water_only_", true);
                         break;
                     case "ground_only_":
-                        EventState.groundonly = true;
+                        EventState.map.replace("ground_only_", true);
                         break;
                     case "air_only_":
-                        EventState.aironly = true;
+                        EventState.map.replace("air_only_", true);
                         break;
                 }
             }

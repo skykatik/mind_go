@@ -84,6 +84,7 @@ public class Main extends Plugin {
     public void init() {
         // Some Stuff Init
         super.init();
+        EventState.init();
         Lobby.init();
         Type.init();
         initStats();
@@ -155,7 +156,7 @@ public class Main extends Plugin {
                         if (health < 6) {
                             player.unit().kill();
                         }
-                        if (EventState.boss) {
+                        if (EventState.map.get("boss")) {
                             if (!data.get(player).isBoss && PlayerData.boss != null) {
                                 text += bundle.get("event.boss.health") + (int) (100 - ((PlayerData.boss.player.unit().maxHealth - PlayerData.boss.player.unit().health) / (PlayerData.boss.player.unit().maxHealth / 100))) + "%";
                             } else if (data.get(player).isBoss) {
@@ -309,25 +310,20 @@ public class Main extends Plugin {
         });
 
         handler.register("events", bundle.get("commands.event.description"), args -> {
-            Log.info(bundle.get("commands.event.cycle") + EventState.cycle
-                    + bundle.get("commands.event.mines") + EventState.mines
-                    + bundle.get("commands.event.meat") + EventState.meat
-                    + bundle.get("commands.event.wateronly") + EventState.wateronly);
+            String text;
+            
+            for (String event : EventState.events) {
+                text = "\n" + event + ": " + EventState.map.get(event);
+            }
         });
-
-        handler.register("cycle", bundle.get("commands.cycle.description"), args -> {
-            EventState.consoleCycle = !EventState.consoleCycle;
-            Log.info(bundle.get("commands.cycle.switch") + EventState.consoleCycle);
-        });
-
-        handler.register("mines", bundle.get("commands.mines.description"), args -> {
-            EventState.consoleMines = !EventState.consoleMines;
-            Log.info(bundle.get("commands.mines.switch") + EventState.consoleMines);
-        });
-
-        handler.register("debug", bundle.get("commands.debug.description"), args -> {
-            debug = !debug;
-            Log.info(bundle.get("commands.debug.start"));
+        
+        handler.register("event", "event_name", args -> {
+            if (EventState.map.get(args[0])) {
+                
+                EventState.map.replace(args[0], !EventState.map.get(args[0]));
+                
+                Log.info(EventState.map.get(args[0]));
+            }
         });
     }
 
@@ -355,7 +351,7 @@ public class Main extends Plugin {
             if (tile.floor() == (Floor) Blocks.metalFloor5) {
                 tile.setNet(Mathf.random(0, 100) > 30 ? Mathf.random(0, 100) > 30 ? Blocks.thoriumWall : Blocks.surgeWall : Blocks.plastaniumWall, Team.get(947), 0); // My love Number :�
             }
-            if (EventState.mines) {
+            if (EventState.map.get("mines")) {
                 if (tile.block() == Blocks.air && Mathf.random(100) > 98) {
                     tile.setNet(Blocks.shockMine, Team.get(947), 0);
                 }

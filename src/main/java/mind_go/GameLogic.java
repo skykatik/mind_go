@@ -58,7 +58,7 @@ public class GameLogic {
                 once = true;
             }
             
-            if (EventState.boss) {
+            if (EventState.map.get("boss")) {
                 if (PlayerData.boss != null) {
                     PlayerData.boss.player.unit().damagePierce(PlayerData.boss.player.unit().maxHealth / 1000 / 9f);
                 }
@@ -109,7 +109,7 @@ public class GameLogic {
     }
 
     public static void start(float sx, float sy, float bx, float by) {
-        if (EventState.boss) {
+        if (EventState.map.get("boss")) {
             selectBoss();
         }
         for (Player player : Groups.player) {
@@ -118,7 +118,7 @@ public class GameLogic {
             Team team;
             // Get Data From Hash Map
             PlayerData data = Main.data.get(player);
-            if (!EventState.boss) {
+            if (!EventState.map.get("boss")) {
                 // Team Changer 
                 teamID = -teamID;
                 // Pick Team
@@ -133,7 +133,7 @@ public class GameLogic {
 
             // Create Unit
             Unit unit;
-            if (!EventState.boss) {
+            if (!EventState.map.get("boss")) {
                 unit = Type.get(data.unit).create(team);
             } else {
                 if (data.isBoss) {
@@ -144,8 +144,18 @@ public class GameLogic {
             }
             // Set Unit to core position
             unit.set(unit.team() == Team.sharded ? sx : bx, unit.team() == Team.sharded ? sy : by);
-
+            Log.info(unit.x + " : " + unit.y);
             // Add Thorium Reactor to mono
+            if (!EventState.map.get("boss")) {
+                unit = Type.get(data.unit).create(team);
+            } else {
+                if (data.isBoss) {
+                    unit = Type.get(data.unit, Type.tier + 1).create(team);
+                } else {
+                    unit = Type.get(data.unit).create(team);
+                }
+            }
+            // Set Unit to core position
             if (Type.tier == 0 && data.unit == Class.AirSupport && !Main.data.get(player).isBoss) /* Mono With Thorium Reactor */ {
                 unit.type = UnitTypes.mono;
                 unit.health = 100f;
