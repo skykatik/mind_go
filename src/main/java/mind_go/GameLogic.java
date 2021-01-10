@@ -142,9 +142,6 @@ public class GameLogic {
                     unit = Type.get(data.unit).create(team);
                 }
             }
-            // Set Unit to core position
-            unit.set(unit.team() == Team.sharded ? sx : bx, unit.team() == Team.sharded ? sy : by);
-            Log.info(unit.x + " : " + unit.y);
             // Add Thorium Reactor to mono
             if (!EventState.map.get("boss")) {
                 unit = Type.get(data.unit).create(team);
@@ -156,6 +153,7 @@ public class GameLogic {
                 }
             }
             // Set Unit to core position
+            unit.set(unit.team() == Team.sharded ? sx : bx, unit.team() == Team.sharded ? sy : by);
             if (Type.tier == 0 && data.unit == Class.AirSupport && !Main.data.get(player).isBoss) /* Mono With Thorium Reactor */ {
                 unit.type = UnitTypes.mono;
                 unit.health = 100f;
@@ -173,6 +171,7 @@ public class GameLogic {
             player.team(team);
             // Add Unit
             unit.add();
+
             // Set Unit To The Player
             data.unita = unit;
             player.unit(unit);
