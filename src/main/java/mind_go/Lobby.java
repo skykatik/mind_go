@@ -200,6 +200,10 @@ public class Lobby {
                 + bundle.get("lobby.author") + nextMap.author()
                 + bundle.get("lobby.mapsize") + nextMap.width + ":" + nextMap.height;
         
+        if (EventState.get("onlys", "free_for_all_")) {
+            EventState.replace("onlys", "ground_only_", true);
+        }
+        
         for (String only : EventState.events[0]) {
             if (nextMap.tags.get(only).equals("true")) {
                 switch (only) {

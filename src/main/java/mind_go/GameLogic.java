@@ -92,8 +92,8 @@ public class GameLogic {
                 if (end) {
                     winnerTeam = lastTeam;
                     gameOver = true;
-                    if (lastUnit != null && lastUnit.isPlayer()) {
-                        WinnerPlayer = lastUnit.getPlayer();
+                    if (Groups.unit.size() > 0 && Groups.unit.index(0).isPlayer()) {
+                        WinnerPlayer = Groups.unit.index(0).getPlayer();
                     }
                 }
             } else if (Groups.player.size() > 0) /* Team Counter */ {
@@ -174,7 +174,7 @@ public class GameLogic {
             }
 
             // Set Unit Position
-            if (EventState.get("gamemode","boss")) {
+            if (EventState.get("onlys","free_for_all_")) {
                 Tile tile = randomTile();
                 unit.set(tile.drawx(), tile.drawy());
                 
@@ -227,7 +227,11 @@ public class GameLogic {
     }
     
     public static Tile randomTile() {
-        Tile tile = Vars.world.tile(Mathf.random(Vars.world.width(), Vars.world.height()), Mathf.random(Vars.world.width(), Vars.world.height()));
+        int x = Mathf.random(0, Vars.world.width() - 1),
+                y = Mathf.random(0, Vars.world.height() - 1);
+        Tile tile = Vars.world.tile(x, y);
+        Log.info(x + ":" + y + " | " + tile);
+        
         if (tile == null) return randomTile();
         if (tile.build != null) return randomTile();
         if (tile.floor().isLiquid) return randomTile();

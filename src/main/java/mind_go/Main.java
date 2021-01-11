@@ -5,7 +5,6 @@ import arc.Events;
 import arc.files.Fi;
 import arc.graphics.Color;
 import arc.math.Mathf;
-import arc.struct.Seq;
 import arc.util.*;
 import arc.util.io.Streams;
 import com.google.gson.*;
@@ -50,7 +49,7 @@ public class Main extends Plugin {
 
     public static int afterLoadTimer = 150,
             timer = 0,
-            lobbyTimer = 60 * 60 / 2,
+            lobbyTimer = 60 * 60 / 2;
             gameTimer = 60 * 60 * 5;
 
     public static HashMap<Player, PlayerData> data = new HashMap<>();
