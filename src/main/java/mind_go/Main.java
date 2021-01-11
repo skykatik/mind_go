@@ -49,7 +49,7 @@ public class Main extends Plugin {
 
     public static int afterLoadTimer = 150,
             timer = 0,
-            lobbyTimer = 60 * 60 / 2;
+            lobbyTimer = 60 * 60 / 2,
             gameTimer = 60 * 60 * 5;
 
     public static HashMap<Player, PlayerData> data = new HashMap<>();
