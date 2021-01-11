@@ -161,14 +161,14 @@ public class Main extends Plugin {
                         if (health < 6) {
                             player.unit().kill();
                         }
-                        if (EventState.map.get("boss")) {
+                        if (EventState.get("gamemode", "boss")) {
                             if (!data.get(player).isBoss && PlayerData.boss != null) {
                                 text += bundle.get("event.boss.health") + (int) (100 - ((PlayerData.boss.player.unit().maxHealth - PlayerData.boss.player.unit().health) / (PlayerData.boss.player.unit().maxHealth / 100))) + "%";
                             } else if (data.get(player).isBoss) {
                                 text += bundle.get("event.boss.damage");
                             }
                         }
-                        if (player.unit() instanceof Payloadc) {
+                        if (player.unit() instanceof Payloadc && player.unit().type == UnitTypes.mono) {
                             Payloadc s = (Payloadc) player.unit();
                             if (s.payloads().size <= 0) {
                                 text += bundle.get("game.reactor");
@@ -256,7 +256,7 @@ public class Main extends Plugin {
                 }
 
                 // Set Only if map start from type_only_
-                for (String only : EventState.onlys) {
+                for (String only : EventState.events[0]) {
                     if (map.name().startsWith(only)) {
                         map.tags.put(only, "true");
                     } else {
@@ -330,9 +330,12 @@ public class Main extends Plugin {
 
         handler.register("events", bundle.get("commands.event.description"), args -> {
             String text = "";
-
-            for (String event : EventState.events) {
-                text += "\n" + event + ": " + EventState.map.get(event);
+            
+            for (int i = 0; i < EventState.categ.length; i++) {
+                String cate = EventState.categ[i];
+                for (String even : EventState.events[i]) {
+                    Log.info(bundle.get("event." + cate + "." + even + ": " + EventState.get(cate, even)));
+                }
             }
             Log.info(text);
 
@@ -340,13 +343,16 @@ public class Main extends Plugin {
 
         handler.register("event", "<event>", "event_name", args -> {
             if (args.length > 0) {
-                for (String event : EventState.events) {
-                    if (event.equals(args[0])) {
-                        EventState.map.put(args[0], !EventState.map.get(args[0]));
-
-                        Call.sendMessage("[red][SERVER] " + bundle.get("commands.event.enable") + " : " + bundle.get("event." + event));
-                        Log.info(EventState.map.get(args[0]));
-                        return;
+                for (int i = 0; i < EventState.categ.length; i++) {
+                    String cate = EventState.categ[i];
+                    for (String even : EventState.events[i]) {
+                        Log.info(cate + "|" + even);
+                        if (even.equals(args[0])) {
+                            EventState.replace(cate, even, !EventState.get(cate, even));
+                            Call.sendMessage("[crimson]Server: " + bundle.get("commands.event.enable") + bundle.get("event." + cate + "." + even));
+                            Log.info("switched to: " + EventState.get(cate, even) + ": " + bundle.get("event." + cate + "." + even));
+                            return;
+                        }
                     }
                 }
                 Log.info("can't find: " + args[0]);
@@ -363,7 +369,7 @@ public class Main extends Plugin {
 
     @Override
     public void loadContent() {
-
+        
     }
 
     public static void initGame() {
@@ -373,7 +379,7 @@ public class Main extends Plugin {
             }
 
             // Mines Event
-            if (EventState.map.get("mines")) {
+            if (EventState.get("floors", "mines")) {
                 if (tile.block() == Blocks.air && Mathf.random(100) > 98) {
                     for (Team team : Team.all) {
                         for (CoreBlock.CoreBuild core : team.cores()) {
@@ -386,7 +392,7 @@ public class Main extends Plugin {
             }
 
             // Lava Event
-            if (EventState.map.get("lava")) {
+            if (EventState.get("floors" , "lava")) {
                 if (tile.block() == Blocks.air && Mathf.random(100) > 98) {
                     for (Team team : Team.all) {
                         for (CoreBlock.CoreBuild core : team.cores()) {
@@ -397,10 +403,14 @@ public class Main extends Plugin {
                     }
                 }
             }
-
         }
-        if (EventState.map.get("rain")) {
+        
+        if (EventState.get("weather", "rain")) {
             Call.createWeather(Weathers.rain, Mathf.random(0.5f, 2f), 10000, 3, 3);
+        }
+        
+        if (EventState.get("weather", "snow")) {
+            Call.createWeather(Weathers.snow, Mathf.random(0.2f, 1.4f), 10000, 3, 3);
         }
     }
 

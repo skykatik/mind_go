@@ -45,7 +45,7 @@ public class Lobby {
 
     public static void update() {
         for (Player player : Groups.player) {
-            Class unit = EventState.map.get("water_only_") ? Class.Naval : EventState.map.get("air_only_") ? Class.Air : Class.Main;
+            Class unit = EventState.get("onlys", "water_only_") ? Class.Naval : EventState.get("onlys", "air_only_") ? Class.Air : Class.Main;
             String text = bundle.get("lobby.nopick");
             for (Room room : rooms) {
                 if (unit == room.classa && room.active) {
@@ -135,7 +135,7 @@ public class Lobby {
         Lobby.inLobby = false;
 
         // Day Night Cycle
-        if (EventState.map.get("cycle")) {
+        if (EventState.get("weather", "cycle")) {
             Main.rules.lighting = false;
             Main.rules.ambientLight = new Color(1, 1, 1, 1);
             Main.rules.enemyLights = true;
@@ -183,9 +183,9 @@ public class Lobby {
             //System.out.println("FUCK LOBBY");
             return loadRandomMap();
         }
-        if (EventState.map.get("meat")) {
-            if (map.width > 75 || map.height > 75) {
-                loadRandomMap();
+        if (EventState.get("gamemode", "meat")) {
+            if (map.width > 100|| map.height > 100) {
+                return loadRandomMap();
             }
         }
 
@@ -200,36 +200,34 @@ public class Lobby {
                 + bundle.get("lobby.author") + nextMap.author()
                 + bundle.get("lobby.mapsize") + nextMap.width + ":" + nextMap.height;
         
-        EventState.map.replace("water_only_", false);
-        EventState.map.replace("air_only_", false);
-        EventState.map.replace("ground_only_", false);
-        EventState.map.replace("free_for_all_", false);
-        
-        for (String event : EventState.events) {
-            if (EventState.map.get(event)) {
-                text += bundle.get("event." + event);
-            }
-        }
-        
-        for (String only : EventState.onlys) {
+        for (String only : EventState.events[0]) {
             if (nextMap.tags.get(only).equals("true")) {
-                text += bundle.get("event." + only);
                 switch (only) {
                     case "water_only_":
-                        EventState.map.replace("water_only_", true);
+                        EventState.replace("onlys", "water_only_", true);
                         break;
                     case "ground_only_":
-                        EventState.map.replace("ground_only_", true);
+                        EventState.replace("onlys", "ground_only_", true);
                         break;
                     case "free_for_all_":
-                        EventState.map.replace("free_for_all_", true);
+                        EventState.replace("onlys", "free_for_all_", true);
                         break;
                     case "air_only_":
-                        EventState.map.replace("air_only_", true);
+                        EventState.replace("onlys", "air_only_", true);
                         break;
                 }
             }
         }
+        // Events Bundle
+        for (int i = 0; i < EventState.categ.length; i++) {
+            String cate = EventState.categ[i];
+            for (String even : EventState.events[i]) {
+                if (EventState.get(cate, even)) {
+                    text += bundle.get("event." + cate + "." + even);
+                }
+            }
+        }
+        
         Call.label(player.con, text, 99999, centreX, centreY);
         for (Room room : rooms) /* show text in centre room */ {
             String textt = room.active ? "" : bundle.get("lobby.disable"); // that only for WaterRooms xd

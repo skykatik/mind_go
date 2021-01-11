@@ -17,10 +17,12 @@ import mindustry.gen.Player;
 import mindustry.gen.Unit;
 
 import static mind_go.Main.bundle;
+import mindustry.Vars;
 import mindustry.content.Blocks;
 import mindustry.content.Items;
 import mindustry.content.UnitTypes;
 import mindustry.gen.Payloadc;
+import mindustry.world.Tile;
 import mindustry.world.blocks.payloads.BuildPayload;
 
 /**
@@ -29,6 +31,8 @@ import mindustry.world.blocks.payloads.BuildPayload;
  */
 public class GameLogic {
 
+    public static int FREE_ID = 100;
+    public static Player WinnerPlayer;
     public static int gameOverTimer = 300,
             teamID = 1,
             timer = 0;
@@ -58,13 +62,13 @@ public class GameLogic {
                 onceGameOver = true;
             }
 
-            if (EventState.map.get("boss")) {
+            if (EventState.get("gamemode", "boss")) {
                 if (PlayerData.boss != null) {
                     PlayerData.boss.player.unit().damagePierce(PlayerData.boss.player.unit().maxHealth / 1000 / 10f);
                 }
             }
-
             if (Groups.unit.size() > 0) {
+                Unit lastUnit = Nulls.unit;
                 boolean end = true;
                 Team lastTeam = Groups.unit.index(0).team;
                 for (Unit unit : Groups.unit) {
@@ -72,7 +76,7 @@ public class GameLogic {
                     if (unit.isFlying()) {
                         unit.damagePierce(unit.maxHealth / 1000 / (unit instanceof Mechc ? 4f : 12f));
                     }
-                    if (unit instanceof Payloadc) {
+                    if (unit instanceof Payloadc && unit.type == UnitTypes.mono) {
                         Payloadc s = (Payloadc) unit;
                         if (s.payloads().size <= 0) {
                             unit.damagePierce(unit.maxHealth / 1000 / 0.7f);
@@ -80,6 +84,7 @@ public class GameLogic {
                     }
                     if (team != lastTeam) {
                         end = false;
+                        lastUnit = unit;
                     }
                     lastTeam = unit.team;
                 }
@@ -87,6 +92,9 @@ public class GameLogic {
                 if (end) {
                     winnerTeam = lastTeam;
                     gameOver = true;
+                    if (lastUnit != null && lastUnit.isPlayer()) {
+                        WinnerPlayer = lastUnit.getPlayer();
+                    }
                 }
             } else if (Groups.player.size() > 0) /* Team Counter */ {
                 winnerTeam = Team.derelict;
@@ -98,15 +106,22 @@ public class GameLogic {
     }
 
     public static void gameOver(Team team) {
-        String text = bundle.get("game.win");
-        if (team == Team.sharded) {
-            text += bundle.get("game.team.sharded");
-        } else if (team == Team.blue) {
-            text += bundle.get("game.team.blue");
-        } else /* no Winner Team*/ {
-            text = bundle.get("game.nowin");
+        String text;
+        if (!EventState.get("onlys", "free_for_all_")) {
+            text = bundle.get("game.win");
+            if (team == Team.sharded) {
+                text += bundle.get("game.team.sharded");
+            } else if (team == Team.blue) {
+                text += bundle.get("game.team.blue");
+            } else /* no Winner Team*/ {
+                text = bundle.get("game.nowin");
+            }
+        } else {
+            text = bundle.get("game.winplayer");
+            if (WinnerPlayer != null) {
+                text += WinnerPlayer.name();
+            }
         }
-
         // DEBUG
         if (Main.debug) {
             System.out.println(text);
@@ -116,7 +131,7 @@ public class GameLogic {
     }
 
     public static void start(float sx, float sy, float bx, float by) {
-        if (EventState.map.get("boss")) {
+        if (EventState.get("gamemode","boss")) {
             selectBoss();
         }
         for (Player player : Groups.player) {
@@ -125,7 +140,7 @@ public class GameLogic {
             Team team;
             // Get Data From Hash Map
             PlayerData data = Main.data.get(player);
-            if (!EventState.map.get("boss")) {
+            if (!EventState.get("gamemode","boss")) {
                 // Team Changer 
                 teamID = -teamID;
                 // Pick Team
@@ -140,8 +155,14 @@ public class GameLogic {
 
             // Create Unit
             Unit unit;
-            if (!EventState.map.get("boss")) {
-                unit = Type.get(data.unit).create(team);
+            if (!EventState.get("gamemode","boss")) {
+                if (!EventState.get("onlys", "free_for_all_")) {
+                    unit = Type.get(data.unit).create(team);
+                } else {
+                    unit = Type.get(data.unit).create(Team.sharded);
+                    FREE_ID++;
+                    if (FREE_ID > 999) FREE_ID = 100; // lol random
+                }
             } else {
                 if (data.isBoss) {
                     unit = Type.get(data.unit, Type.tier + 1).create(team);
@@ -153,8 +174,10 @@ public class GameLogic {
             }
 
             // Set Unit Position
-            if (EventState.map.get("free_for_all_")) {
-
+            if (EventState.get("gamemode","boss")) {
+                Tile tile = randomTile();
+                unit.set(tile.drawx(), tile.drawy());
+                
             } else {
                 unit.set(unit.team() == Team.sharded ? sx : bx, unit.team() == Team.sharded ? sy : by);
             }
@@ -173,10 +196,14 @@ public class GameLogic {
                 unit.addItem(Items.blastCompound, unit.type.itemCapacity);
             }
 
-            player.team(team);
             // Add Unit
             unit.add();
 
+            if (EventState.get("onlys", "free_for_all_")) {
+                player.team(Team.get(FREE_ID));
+            } else {
+                player.team(team);
+            }
             // Set Unit To The Player
             data.unita = unit;
             player.unit(unit);
@@ -197,5 +224,13 @@ public class GameLogic {
             PlayerData.boss = dat;
             Call.sendMessage(dat.player.name() + bundle.get("event.boss.fight"));
         }
+    }
+    
+    public static Tile randomTile() {
+        Tile tile = Vars.world.tile(Mathf.random(Vars.world.width(), Vars.world.height()), Mathf.random(Vars.world.width(), Vars.world.height()));
+        if (tile == null) return randomTile();
+        if (tile.build != null) return randomTile();
+        if (tile.floor().isLiquid) return randomTile();
+        return tile;
     }
 }

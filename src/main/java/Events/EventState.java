@@ -16,66 +16,92 @@ import mind_go.Type;
  * @author Xusk
  */
 public class EventState {
-    public static HashMap<String, Boolean> map = new HashMap<>();
-    
-    // FOR INITIALIZE ON SERVER START
-    public static String[] onlys = new String[] {
-        "water_only_", "ground_only_", "air_only_", "free_for_all_"
+
+    public static HashMap<String, HashMap> category = new HashMap<>();
+    public static HashMap<String, Boolean> categoryEnabled = new HashMap<>();
+    // init events    
+    public static String[] categ = new String[]{
+        "onlys", "weather", "floors", "gamemode"
     };
-    
-    // init events
-    public static String[] events = new String[] {
-        "water_only_", "ground_only_", "air_only_", "free_for_all_",
-        
-        "cycle", "rain",
-        
-        "mines", "lava", 
-        
-        "boss", "meat"
+
+    public static String[][] events = new String[][]{
+        { // Onlys
+            "water_only_", "ground_only_", "air_only_", "free_for_all_", "bomb_defense_", "base_defense_",
+        },
+        { // Weather
+            "cycle", "rain", "snow"
+        },
+        { // Floors
+            "lava", "mines"
+        },
+        { // GameMode
+            "boss", "meat"
+        }
     };
-    
+    public static boolean weather = false,
+            floors = false,
+            gamemode = false;
+
     public static void init() {
-        for (String event : events) {
-            map.put(event, false);
+        for (int i = 0; i < categ.length; i++) {
+            String cate = categ[i];
+            HashMap<String, Boolean> hash = new HashMap<>();
+            for (String string : events[i]) {
+                hash.put(string, false);
+            }
+            category.put(cate, hash);
         }
     }
-    
+
     public static void generate(int maxEvents) {
+
+        weather = false;
+        floors = false;
+        gamemode = false;
+
         int current = 0;
-        
-        for (String event : events) {
-            map.put(event, false);
+
+        for (int i = 0; i < categ.length; i++) {
+            for (String evnt : events[i]) {
+                category.get(categ[i]).replace(evnt, false);
+            }
+        }
+
+        for (int i = 0; i < categ.length; i++) {
+            String catego = categ[i];
+            for (String even : events[i]) {
+
+            }
+        }
+
+        if (get("gamemode", "meat")) {
+            Type.tier = Mathf.random(4, 5);
+        }
+
+        if (get("gamemode", "boss")) {
+            Type.tier = Mathf.random(0, 3);
         }
         
-        for (String event : events) {
-            
-            // Map Only Rules
-            for (String only : onlys) {
-                if (event.equals(only)) continue;
-            }
-            
-            // Floors
-            if (event.equals("lava") && EventState.map.get("mines")) continue;
-            
-            // Game Events
-            if (event.equals("meat") && EventState.map.get("boss")) continue;
-            
-            if (Mathf.random(0, 100) > 65) {
-                map.put(event, true);
-                current++;
-            }
-            
-            if (current >= maxEvents) return;
+        if (get("onlys", "free_for_all_")) {
+            EventState.replace("onlys", "ground_only_", true);
         }
         
-        if (map.get("meat")) Type.tier = 4;
-        
-        if (map.get("boss")) Type.tier = Mathf.random(0, 3);
-        
-        if (map.get("cycle")) {
+        if (get("weather", "cycle")) {
             Main.rules.lighting = true;
             Main.rules.enemyLights = false;
-            Main.rules.ambientLight = new Color(0, 0, 0, Mathf.random(0.7f, 1f));
+            Main.rules.ambientLight = new Color(0, 0, 0, Mathf.random(0.8f, 1f));
         }
+    }
+
+    public static boolean get(String category, String name) {
+        return (boolean) EventState.category.get(category).get(name);
+    }
+
+    public static void put(String category, String name, Boolean what) {
+        EventState.category.get(category).put(name, what);
+    }
+    
+    public static void replace(String category, String name, Boolean what) {
+        EventState.category.get(category).replace(name, what);
     }
 }
