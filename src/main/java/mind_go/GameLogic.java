@@ -89,8 +89,11 @@ public class GameLogic {
                     lastTeam = unit.team;
                 }
 
-                if (end) {
+                if (end || (EventState.get("gamemode", "boss") && PlayerData.boss.player.unit().health <= 0)) {
                     winnerTeam = lastTeam;
+                    if (EventState.get("gamemode", "boss")) {
+                        winnerTeam = Team.sharded;
+                    }
                     gameOver = true;
                     if (Groups.unit.size() > 0 && Groups.unit.index(0).isPlayer()) {
                         WinnerPlayer = Groups.unit.index(0).getPlayer();

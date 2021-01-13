@@ -54,23 +54,23 @@ public class EventState {
     }
 
     public static void generate(int maxEvents) {
-
-        weather = false;
-        floors = false;
-        gamemode = false;
-
         int current = 0;
 
         for (int i = 0; i < categ.length; i++) {
             for (String evnt : events[i]) {
                 category.get(categ[i]).replace(evnt, false);
             }
+            categoryEnabled.replace(categ[i], false);
         }
 
         for (int i = 0; i < categ.length; i++) {
             String catego = categ[i];
             for (String even : events[i]) {
-
+                if (current <= maxEvents && !categoryEnabled.get(catego) && Mathf.random(0, 100) > 60) {
+                    category.get(catego).replace(even, true);
+                    categoryEnabled.replace(catego, true);
+                    current++;
+                }
             }
         }
 
