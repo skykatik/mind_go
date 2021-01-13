@@ -7,6 +7,7 @@ package Events;
 
 import arc.graphics.Color;
 import arc.math.Mathf;
+import arc.util.Log;
 import java.util.HashMap;
 import mind_go.Main;
 import mind_go.Type;
@@ -50,6 +51,7 @@ public class EventState {
                 hash.put(string, false);
             }
             category.put(cate, hash);
+            categoryEnabled.put(cate, false);
         }
     }
 
@@ -65,6 +67,8 @@ public class EventState {
 
         for (int i = 0; i < categ.length; i++) {
             String catego = categ[i];
+            if (i == 0) continue;
+            if (catego.equals("gamemode") && get("onlys", "free_for_all_")) continue;
             for (String even : events[i]) {
                 if (current <= maxEvents && !categoryEnabled.get(catego) && Mathf.random(0, 100) > 60) {
                     category.get(catego).replace(even, true);
@@ -75,7 +79,7 @@ public class EventState {
         }
 
         if (get("gamemode", "meat")) {
-            Type.tier = Mathf.random(4, 5);
+            Type.tier = Mathf.random(3, 4);
         }
 
         if (get("gamemode", "boss")) {

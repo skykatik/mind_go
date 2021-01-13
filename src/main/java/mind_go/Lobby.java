@@ -78,18 +78,16 @@ public class Lobby {
         PlayerData.resetValues();
         Lobby.inLobby = true;
 
-        
         // Update GameTier
         Type.oldTier = Type.tier;
         Type.tier = Type.changeTier();
-        
+
         // Events Region 
         EventState.generate(Mathf.random(4));
 
         // Switched To Night?
         Main.rules.lighting = false;
         Main.rules.enemyLights = true;
-        
 
         // Events Region End 
         // Add Players In 'players' Seq
@@ -120,9 +118,9 @@ public class Lobby {
         for (Player p : players) {
             Vars.netServer.sendWorldData(p);
         }
-        
+
         Call.setRules(Vars.state.rules);
-        
+
     }
 
     public static void out() {
@@ -161,7 +159,7 @@ public class Lobby {
 
         // Logic Reset End
         Vars.logic.play();
-        
+
         // Send World Data To All Players
         for (Player p : players) {
             Vars.netServer.sendWorldData(p);
@@ -184,7 +182,13 @@ public class Lobby {
             return loadRandomMap();
         }
         if (EventState.get("gamemode", "meat")) {
-            if (map.width > 100|| map.height > 100) {
+            if (map.width > 100 || map.height > 100) {
+                return loadRandomMap();
+            }
+        } else if (!EventState.get("onlys", "free_for_all_")) {
+            if (Type.tier < 3 && (map.width > 100 || map.height > 100)) {
+                return loadRandomMap();
+            } else if (Type.tier >= 3 && (map.width < 100 || map.height < 100)) {
                 return loadRandomMap();
             }
         }
@@ -199,11 +203,11 @@ public class Lobby {
         String text = bundle.get("lobby.nmap") + nextMap.name()
                 + bundle.get("lobby.author") + nextMap.author()
                 + bundle.get("lobby.mapsize") + nextMap.width + ":" + nextMap.height;
-        
+
         if (EventState.get("onlys", "free_for_all_")) {
             EventState.replace("onlys", "ground_only_", true);
         }
-        
+
         for (String only : EventState.events[0]) {
             if (nextMap.tags.get(only).equals("true")) {
                 switch (only) {
@@ -215,6 +219,8 @@ public class Lobby {
                         break;
                     case "free_for_all_":
                         EventState.replace("onlys", "free_for_all_", true);
+                        EventState.replace("gamemode", "meat", false);
+                        EventState.replace("gamemode", "boss", false);
                         break;
                     case "air_only_":
                         EventState.replace("onlys", "air_only_", true);
@@ -231,7 +237,7 @@ public class Lobby {
                 }
             }
         }
-        
+
         Call.label(player.con, text, 99999, centreX, centreY);
         for (Room room : rooms) /* show text in centre room */ {
             String textt = room.active ? "" : bundle.get("lobby.disable"); // that only for WaterRooms xd
@@ -258,19 +264,21 @@ public class Lobby {
 
             // Event Water|Air|Ground Only Region
             // Water Only
-            if (!(unit instanceof WaterMovec) && nextMap.tags.get("water_only_").equals("true")) {
+            if ((room.classa == Class.Naval) && nextMap.tags.get("water_only_").equals("true")) {
                 room.active = false;
                 continue;
             }
 
             // Ground Only
-            if (!(unit instanceof Mechc || unit instanceof Legsc) && nextMap.tags.get("ground_only_").equals("true")) {
+            if ((room.classa == Class.Air || room.classa == Class.AirSupport) && (nextMap.tags.get("ground_only_").equals("true") ||nextMap.tags.get("free_for_all_").equals("true"))) {
                 room.active = false;
+                continue;
             }
 
             // Air Only
             if ((room.classa != Class.Air || room.classa != Class.AirSupport) && nextMap.tags.get("air_only_").equals("true")) {
                 room.active = false;
+                continue;
             }
 
             // Event Water|Air|Ground Only Region End

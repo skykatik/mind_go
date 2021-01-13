@@ -156,7 +156,11 @@ public class Main extends Plugin {
                         String text;
                         int health = (int) (100 - ((player.unit().maxHealth - player.unit().health) / (player.unit().maxHealth / 100)));
                         text = bundle.get("game.timer") + (int) ((gameTimer - timer) / 60) + bundle.get("game.health") + health + "%";
-                        text += bundle.get("game.team") + (player.team() == Team.sharded ? bundle.get("game.team.sharded") : bundle.get("game.team.blue"));
+                        if (EventState.get("onlys", "free_for_all_")) {
+                            text += bundle.get("game.team") + (player.team() == Team.sharded ? bundle.get("game.team.sharded") : bundle.get("game.team.blue"));
+                        } else {
+                            text += bundle.get("game.team") + player.team().id;
+                        }
                         if (health < 6) {
                             player.unit().kill();
                         }
@@ -239,7 +243,7 @@ public class Main extends Plugin {
             }
             data.remove(event.player);
         });
-
+        
         // Server Load
         Events.on(EventType.ServerLoadEvent.class, event -> {
             Lobby.go();
@@ -392,7 +396,7 @@ public class Main extends Plugin {
 
             // Lava Event
             if (EventState.get("floors" , "lava")) {
-                if (tile.block() == Blocks.air && Mathf.random(100) > 98) {
+                if (tile.block() == Blocks.air && tile.floor() != (Floor) Blocks.space && Mathf.random(100) > 98) {
                     for (Team team : Team.all) {
                         for (CoreBlock.CoreBuild core : team.cores()) {
                             if (Mathf.dst(core.getX(), core.getY(), tile.drawx(), tile.drawy()) > Vars.tilesize * 10) {

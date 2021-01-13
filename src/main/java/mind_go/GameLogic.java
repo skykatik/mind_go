@@ -7,7 +7,9 @@ package mind_go;
 
 import Events.EventState;
 import arc.math.Mathf;
+import arc.struct.Seq;
 import arc.util.Log;
+import java.util.HashMap;
 import mindustry.game.Team;
 import mindustry.gen.Call;
 import mindustry.gen.Groups;
@@ -40,6 +42,8 @@ public class GameLogic {
     public static boolean onceGameOver = false,
             unitSpawned = false,
             gameOver = false;
+
+    public static HashMap<Unit, Float> units = new HashMap<>();
 
     public static void update() {
         if (unitSpawned) {
@@ -88,7 +92,9 @@ public class GameLogic {
                     }
                     lastTeam = unit.team;
                 }
-
+                
+                getDamage();
+                
                 if (end || (EventState.get("gamemode", "boss") && PlayerData.boss.player.unit().health <= 0)) {
                     winnerTeam = lastTeam;
                     if (EventState.get("gamemode", "boss")) {
@@ -134,7 +140,7 @@ public class GameLogic {
     }
 
     public static void start(float sx, float sy, float bx, float by) {
-        if (EventState.get("gamemode","boss")) {
+        if (EventState.get("gamemode", "boss")) {
             selectBoss();
         }
         for (Player player : Groups.player) {
@@ -143,7 +149,7 @@ public class GameLogic {
             Team team;
             // Get Data From Hash Map
             PlayerData data = Main.data.get(player);
-            if (!EventState.get("gamemode","boss")) {
+            if (!EventState.get("gamemode", "boss")) {
                 // Team Changer 
                 teamID = -teamID;
                 // Pick Team
@@ -158,13 +164,15 @@ public class GameLogic {
 
             // Create Unit
             Unit unit;
-            if (!EventState.get("gamemode","boss")) {
+            if (!EventState.get("gamemode", "boss")) {
                 if (!EventState.get("onlys", "free_for_all_")) {
                     unit = Type.get(data.unit).create(team);
                 } else {
                     unit = Type.get(data.unit).create(Team.sharded);
                     FREE_ID++;
-                    if (FREE_ID > 999) FREE_ID = 100; // lol random
+                    if (FREE_ID > 999) {
+                        FREE_ID = 100; // lol random
+                    }
                 }
             } else {
                 if (data.isBoss) {
@@ -177,10 +185,10 @@ public class GameLogic {
             }
 
             // Set Unit Position
-            if (EventState.get("onlys","free_for_all_")) {
+            if (EventState.get("onlys", "free_for_all_")) {
                 Tile tile = randomTile();
                 unit.set(tile.drawx(), tile.drawy());
-                
+
             } else {
                 unit.set(unit.team() == Team.sharded ? sx : bx, unit.team() == Team.sharded ? sy : by);
             }
@@ -211,10 +219,10 @@ public class GameLogic {
             data.unita = unit;
             player.unit(unit);
         }
-        
+
         unitSpawned = true;
     }
-    
+
     public static void start() {
         start(Main.sx, Main.sy, Main.bx, Main.by);
     }
@@ -228,16 +236,48 @@ public class GameLogic {
             Call.sendMessage(dat.player.name() + bundle.get("event.boss.fight"));
         }
     }
-    
+
     public static Tile randomTile() {
         int x = Mathf.random(0, Vars.world.width() - 1),
                 y = Mathf.random(0, Vars.world.height() - 1);
         Tile tile = Vars.world.tile(x, y);
         Log.info(x + ":" + y + " | " + tile);
-        
-        if (tile == null) return randomTile();
-        if (tile.build != null) return randomTile();
-        if (tile.floor().isLiquid) return randomTile();
+
+        if (tile == null) {
+            return randomTile();
+        }
+        if (tile.build != null) {
+            return randomTile();
+        }
+        if (!tile.block().isAir()) {
+            return randomTile();
+        }
+        if (tile.floor().isLiquid) {
+            return randomTile();
+        }
         return tile;
+    }
+
+    public static void getDamage() {
+        if (units.size() == Groups.unit.size()) {
+            for (Unit unit : Groups.unit) {
+                if (units.get(unit) == null) continue;
+                if (!units.containsKey(unit)) continue;
+                if (unit.health != units.get(unit)) {
+                    float oldHealth = (float) (100 - ((unit.maxHealth - units.get(unit)) / (unit.maxHealth / 100)));
+                    float health = (float) (100 - ((unit.maxHealth - unit.health) / (unit.maxHealth / 100)));
+                    float hh = oldHealth - health;
+                    if (unit.type.flying && hh >= 1) {
+                        Call.label("[#" + unit.team.color.toString() + "]" + (Mathf.floor(hh * 100) / 100), 1, unit.x(), unit.y());
+                    } else if (!unit.type.flying && hh > 0.3) {
+                        Call.label("[#" + unit.team.color.toString() + "]" + (Mathf.floor(hh * 100) / 100), 1, unit.x(), unit.y());
+                    }
+                }
+            }
+        }
+        units.clear();
+        for (Unit unit : Groups.unit) {
+            units.put(unit, unit.health);
+        }
     }
 }
