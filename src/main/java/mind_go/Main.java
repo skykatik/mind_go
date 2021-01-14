@@ -63,7 +63,6 @@ public class Main extends Plugin {
     public static float sx, sy, bx, by;
 
     public Main() {
-
         Fi cfg = dataDirectory.child("config.json");
         if (!cfg.exists()) {
             cfg.writeString(gson.toJson(config = new Config()));
@@ -166,9 +165,9 @@ public class Main extends Plugin {
                         }
                         if (EventState.get("gamemode", "boss")) {
                             if (!data.get(player).isBoss && PlayerData.boss != null) {
-                                text += bundle.get("event.boss.health") + (int) (100 - ((PlayerData.boss.player.unit().maxHealth - PlayerData.boss.player.unit().health) / (PlayerData.boss.player.unit().maxHealth / 100))) + "%";
+                                text += bundle.get("event.gamemode.boss.health") + (int) (100 - ((PlayerData.boss.player.unit().maxHealth - PlayerData.boss.player.unit().health) / (PlayerData.boss.player.unit().maxHealth / 100))) + "%";
                             } else if (data.get(player).isBoss) {
-                                text += bundle.get("event.boss.damage");
+                                text += bundle.get("event.gamemode.boss.damage");
                             }
                         }
                         if (player.unit() instanceof Payloadc && player.unit().type == UnitTypes.mono) {
