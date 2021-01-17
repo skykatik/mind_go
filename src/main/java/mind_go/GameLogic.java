@@ -7,7 +7,7 @@ package mind_go;
 
 import Events.EventState;
 import arc.math.Mathf;
-import arc.struct.Seq;
+import arc.struct.*;
 import arc.util.Log;
 import java.util.HashMap;
 import mindustry.game.Team;
@@ -43,11 +43,11 @@ public class GameLogic {
             unitSpawned = false,
             gameOver = false;
 
-    public static HashMap<Unit, Float> units = new HashMap<>();
+    public static ObjectMap<Unit, Float> units = new ObjectMap<>();
 
     public static void update() {
         if (unitSpawned) {
-            if (gameOver == true) /* Timer for non instant translate to the lobby */ {
+            if (gameOver) /* Timer for non instant translate to the lobby */ {
                 timer++;
                 if (onceGameOver) /* show message with winner team */ {
                     gameOver(winnerTeam);
@@ -57,9 +57,7 @@ public class GameLogic {
                     timer = 0;
                     gameOver = false;
                     unitSpawned = false;
-                    if (Main.debug) {
-                        Log.info(bundle.get("debug.logic"));
-                    }
+                    Log.debug(bundle.get("debug.logic"));
                     Lobby.go();
                 }
             } else /* set when not gameOver */ {
@@ -92,9 +90,9 @@ public class GameLogic {
                     }
                     lastTeam = unit.team;
                 }
-                
+
                 getDamage();
-                
+
                 if (end || (EventState.get("gamemode", "boss") && PlayerData.boss.player.unit().health <= 0)) {
                     winnerTeam = lastTeam;
                     if (EventState.get("gamemode", "boss")) {
@@ -122,7 +120,7 @@ public class GameLogic {
                 text += bundle.get("game.team.sharded");
             } else if (team == Team.blue) {
                 text += bundle.get("game.team.blue");
-            } else /* no Winner Team*/ {
+            } else /* no Winner Team */ {
                 text = bundle.get("game.nowin");
             }
         } else {
@@ -131,10 +129,8 @@ public class GameLogic {
                 text += WinnerPlayer.name();
             }
         }
-        // DEBUG
-        if (Main.debug) {
-            System.out.println(text);
-        }
+
+        Log.debug(text);
 
         Call.infoMessage(text);
     }
@@ -150,7 +146,7 @@ public class GameLogic {
             // Get Data From Hash Map
             PlayerData data = Main.data.get(player);
             if (!EventState.get("gamemode", "boss")) {
-                // Team Changer 
+                // Team Changer
                 teamID = -teamID;
                 // Pick Team
                 team = teamID > 0 ? Team.sharded : Team.blue;
@@ -241,7 +237,7 @@ public class GameLogic {
         int x = Mathf.random(0, Vars.world.width() - 1),
                 y = Mathf.random(0, Vars.world.height() - 1);
         Tile tile = Vars.world.tile(x, y);
-        Log.info(x + ":" + y + " | " + tile);
+        Log.info("@x@ | @", x, y, tile);
 
         if (tile == null) {
             return randomTile();
@@ -259,13 +255,12 @@ public class GameLogic {
     }
 
     public static void getDamage() {
-        if (units.size() == Groups.unit.size()) {
+        if (units.size == Groups.unit.size()) {
             for (Unit unit : Groups.unit) {
-                if (units.get(unit) == null) continue;
-                if (!units.containsKey(unit)) continue;
+                if(units.get(unit) == null || !units.containsKey(unit)) continue;
                 if (unit.health != units.get(unit)) {
-                    float oldHealth = (float) (100 - ((unit.maxHealth - units.get(unit)) / (unit.maxHealth / 100)));
-                    float health = (float) (100 - ((unit.maxHealth - unit.health) / (unit.maxHealth / 100)));
+                    float oldHealth = 100 - ((unit.maxHealth - units.get(unit)) / (unit.maxHealth / 100));
+                    float health = 100 - ((unit.maxHealth - unit.health) / (unit.maxHealth / 100));
                     float hh = oldHealth - health;
                     if (unit.type.flying && hh >= 1) {
                         Call.label("[#" + unit.team.color.toString() + "]" + (Mathf.floor(hh * 100) / 100), 1, unit.x(), unit.y());

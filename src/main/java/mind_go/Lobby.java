@@ -25,7 +25,6 @@ import mindustry.gen.WaterMovec;
 import mindustry.maps.Map;
 import mindustry.world.blocks.payloads.BuildPayload;
 
-@SuppressWarnings("unchecked")
 public class Lobby {
 
     public static boolean inLobby = false;
@@ -34,7 +33,7 @@ public class Lobby {
 
     public static void init() {
         nextMap = loadRandomMap();
-        rooms = new Seq();
+        rooms = new Seq<>();
         rooms.add(new Room(Class.Main, bundle.get("room.main"), 8, 29)); // centre left
         rooms.add(new Room(Class.Support, bundle.get("room.support"), 50, 29)); // centre right
         rooms.add(new Room(Class.Naval, bundle.get("room.naval"), 17, 5)); // bottom left
@@ -58,7 +57,7 @@ public class Lobby {
                 }
             }
             // Show how much time to start
-            text += bundle.get("lobby.timer") + (int) ((Main.lobbyTimer - Main.timer) / 60);
+            text += bundle.get("lobby.timer") + ((Main.lobbyTimer - Main.timer) / 60);
             Call.setHudText(player.con(), text);
         }
 
@@ -68,10 +67,7 @@ public class Lobby {
     }
 
     public static void go() {
-        // DEBUG
-        if (Main.debug) {
-            Log.info(bundle.get("debug.lobby"));
-        }
+        Log.debug(bundle.get("debug.lobby"));
 
         // Set LobbyState to in Lobby
         Main.timer = 0;
@@ -82,14 +78,14 @@ public class Lobby {
         Type.oldTier = Type.tier;
         Type.tier = Type.changeTier();
 
-        // Events Region 
+        // Events Region
         EventState.generate(Mathf.random(4));
 
         // Switched To Night?
         Main.rules.lighting = false;
         Main.rules.enemyLights = true;
 
-        // Events Region End 
+        // Events Region End
         // Add Players In 'players' Seq
         Seq<Player> players = new Seq<>();
 
@@ -124,10 +120,8 @@ public class Lobby {
     }
 
     public static void out() {
-        // DEBUG
-        if (Main.debug) {
-            Log.info(bundle.get("debug.lobbyx2"));
-        }
+        Log.debug(bundle.get("debug.lobbyx2"));
+
         // Set Lobby State
         Main.timer = 0;
         Lobby.inLobby = false;
@@ -200,9 +194,9 @@ public class Lobby {
         float centreX = Vars.world.width() / 2 * Vars.tilesize;
         float centreY = Vars.world.height() / 2 * Vars.tilesize;
 
-        String text = bundle.get("lobby.nmap") + nextMap.name()
-                + bundle.get("lobby.author") + nextMap.author()
-                + bundle.get("lobby.mapsize") + nextMap.width + ":" + nextMap.height;
+        String text = bundle.format("lobby.nmap", nextMap.name())
+                + bundle.format("lobby.author", nextMap.author())
+                + bundle.format("lobby.mapsize", nextMap.width, nextMap.height);
 
         if (EventState.get("onlys", "free_for_all_")) {
             EventState.replace("onlys", "ground_only_", true);
@@ -255,7 +249,7 @@ public class Lobby {
             unit.set(room.centreX, room.centreY);
 
             // If Map has Water
-            if (unit instanceof WaterMovec && nextMap.tags.get("hasLiquid").equals("true")) {
+            if (unit instanceof WaterMovec && nextMap.tags.getBool("hasLiquid")) {
                 unit.tileOn().setFloorNet(Blocks.water);
             } else if (unit instanceof WaterMovec) {
                 room.active = false;
@@ -264,19 +258,19 @@ public class Lobby {
 
             // Event Water|Air|Ground Only Region
             // Water Only
-            if ((room.classa == Class.Naval) && nextMap.tags.get("water_only_").equals("true")) {
+            if ((room.classa == Class.Naval) && nextMap.tags.getBool("water_only_")) {
                 room.active = false;
                 continue;
             }
 
             // Ground Only
-            if ((room.classa == Class.Air || room.classa == Class.AirSupport) && (nextMap.tags.get("ground_only_").equals("true") ||nextMap.tags.get("free_for_all_").equals("true"))) {
+            if ((room.classa == Class.Air || room.classa == Class.AirSupport) && (nextMap.tags.getBool("ground_only_") || nextMap.tags.getBool("free_for_all_"))) {
                 room.active = false;
                 continue;
             }
 
             // Air Only
-            if ((room.classa != Class.Air || room.classa != Class.AirSupport) && nextMap.tags.get("air_only_").equals("true")) {
+            if ((room.classa != Class.Air || room.classa != Class.AirSupport) && nextMap.tags.getBool("air_only_")) {
                 room.active = false;
                 continue;
             }

@@ -10,7 +10,7 @@ import mindustry.gen.Unit;
 
 public class Room {
 
-    public final static int ROOM_SIZE = 16;
+    public static final int ROOM_SIZE = 16;
 
     int roomSize;
     float x, y, endX, endY, centreX, centreY;

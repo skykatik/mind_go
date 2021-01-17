@@ -5,6 +5,7 @@ import arc.Events;
 import arc.files.Fi;
 import arc.graphics.Color;
 import arc.math.Mathf;
+import arc.struct.ObjectMap;
 import arc.util.*;
 import arc.util.io.Streams;
 import com.google.gson.*;
@@ -19,6 +20,7 @@ import mindustry.game.Rules;
 import mindustry.gen.*;
 import mindustry.maps.Map;
 import mindustry.mod.Plugin;
+import mindustry.net.Administration;
 import mindustry.world.Block;
 import mindustry.world.Tile;
 import mindustry.world.blocks.environment.Floor;
@@ -52,10 +54,9 @@ public class Main extends Plugin {
             lobbyTimer = 60 * 60 / 2,
             gameTimer = 60 * 60 * 5;
 
-    public static HashMap<Player, PlayerData> data = new HashMap<>();
+    public static ObjectMap<Player, PlayerData> data = new ObjectMap<>();
 
-    public static boolean debug = false,
-            loaded = false,
+    public static boolean loaded = false,
             timerSeted = false,
             worldLoaded = false;
 
@@ -84,10 +85,8 @@ public class Main extends Plugin {
     @Override
     public void init() {
         // Some Stuff Init
-        super.init();
         EventState.init();
         Lobby.init();
-        Type.init();
         initStats();
 
         // Rules Stuff Here
@@ -118,8 +117,10 @@ public class Main extends Plugin {
                         Groups.player.each(player -> /* Show Text To Player */ {
                                     Lobby.showShopText(player);
                                 });
-                        if (debug) /* Debug Stuff */ {
-                            debug();
+                        if (Administration.Config.debug.bool()) {
+                            for (Room room : Lobby.rooms) /* Draw Debug Square With Bullets */ {
+                                room.debugDraw();
+                            }
                         }
                     } else /* Game Once */ {
                         killCores();
@@ -141,11 +142,7 @@ public class Main extends Plugin {
                     }
                 } else /* Game Logic */ {
                     if (timer > gameTimer && !GameLogic.gameOver) /* Go to Lobby when Timer out*/ {
-
-                        // DEBUG
-                        if (debug) {
-                            Log.info(bundle.get("game.timeout"));
-                        }
+                        Log.debug(bundle.get("game.timeout"));
 
                         Lobby.go();
                         timer = 0;
@@ -154,18 +151,18 @@ public class Main extends Plugin {
                     for (Player player : Groups.player) /* Set Hud To Players */ {
                         String text;
                         int health = (int) (100 - ((player.unit().maxHealth - player.unit().health) / (player.unit().maxHealth / 100)));
-                        text = bundle.get("game.timer") + (int) ((gameTimer - timer) / 60) + bundle.get("game.health") + health + "%";
+                        text = bundle.format("game.timer", ((gameTimer - timer) / 60) + bundle.get("game.health") + health + "%");
                         if (EventState.get("onlys", "free_for_all_")) {
-                            text += bundle.get("game.team") + (player.team() == Team.sharded ? bundle.get("game.team.sharded") : bundle.get("game.team.blue"));
+                            text += bundle.format("game.team", (player.team() == Team.sharded ? bundle.get("game.team.sharded") : bundle.get("game.team.blue")));
                         } else {
-                            text += bundle.get("game.team") + player.team().id;
+                            text += bundle.format("game.team", player.team().id);
                         }
                         if (health < 6) {
                             player.unit().kill();
                         }
                         if (EventState.get("gamemode", "boss")) {
                             if (!data.get(player).isBoss && PlayerData.boss != null) {
-                                text += bundle.get("event.gamemode.boss.health") + (int) (100 - ((PlayerData.boss.player.unit().maxHealth - PlayerData.boss.player.unit().health) / (PlayerData.boss.player.unit().maxHealth / 100))) + "%";
+                                text += bundle.format("event.gamemode.boss.health", (int) (100 - ((PlayerData.boss.player.unit().maxHealth - PlayerData.boss.player.unit().health) / (PlayerData.boss.player.unit().maxHealth / 100))));
                             } else if (data.get(player).isBoss) {
                                 text += bundle.get("event.gamemode.boss.damage");
                             }
@@ -188,7 +185,7 @@ public class Main extends Plugin {
                         // return player again in unit if it try to out from unit
                         Groups.player.each(player -> {
                             PlayerData date = data.get(player);
-                            if (date.unita != null && date.unita.dead == true) {
+                            if (date.unita != null && date.unita.dead) {
                                 date.unita = null;
                             }
                             if (date.unita != null && !date.unita.isPlayer()) {
@@ -242,7 +239,7 @@ public class Main extends Plugin {
             }
             data.remove(event.player);
         });
-        
+
         // Server Load
         Events.on(EventType.ServerLoadEvent.class, event -> {
             Lobby.go();
@@ -251,19 +248,11 @@ public class Main extends Plugin {
 
             // set tup maps with liquids to create WaterMovec units
             for (Map map : Vars.maps.all()) {
-                if (map.name().startsWith("water_")) {
-                    map.tags.put("hasLiquid", "true");
-                } else {
-                    map.tags.put("hasLiquid", "false");
-                }
+                map.tags.put("hasLiquid", String.valueOf(map.name().startsWith("water_")));
 
                 // Set Only if map start from type_only_
                 for (String only : EventState.events[0]) {
-                    if (map.name().startsWith(only)) {
-                        map.tags.put(only, "true");
-                    } else {
-                        map.tags.put(only, "false");
-                    }
+                    map.tags.put(only, String.valueOf(map.name().startsWith(only)));
                 }
             }
         });
@@ -291,7 +280,6 @@ public class Main extends Plugin {
 
     // TODO: do something with that lol
     @Override
-
     public void registerClientCommands(CommandHandler handler) {
 
     }
@@ -319,20 +307,20 @@ public class Main extends Plugin {
         });
 
         handler.register("stats", bundle.get("commands.info.description"), args -> {
-            Log.info(bundle.get("commands.info.map") + Vars.state.map.name()
-                    + bundle.get("commands.info.tier") + Type.tier
-                    + bundle.get("commands.info.data") + data.size()
-                    + bundle.get("commands.info.rooms") + Lobby.rooms.size
-                    + bundle.get("commands.info.units") + Groups.unit.size()
-                    + bundle.get("commands.info.inlobby") + Lobby.inLobby
-                    + bundle.get("commands.info.nmap") + Lobby.nextMap.name()
+            Log.info(bundle.format("commands.info.map", Vars.state.map.name())
+                    + bundle.format("commands.info.tier", Type.tier)
+                    + bundle.format("commands.info.data", data.size)
+                    + bundle.format("commands.info.rooms", Lobby.rooms.size)
+                    + bundle.format("commands.info.units", Groups.unit.size())
+                    + bundle.format("commands.info.inlobby", Lobby.inLobby)
+                    + bundle.format("commands.info.nmap", Lobby.nextMap.name())
             );
             Call.sendMessage(appName);
         });
 
-        handler.register("events", bundle.get("commands.event.description"), args -> {
+        handler.register("events", "Display all events.", args -> {
             String text = "";
-            
+
             for (int i = 0; i < EventState.categ.length; i++) {
                 String cate = EventState.categ[i];
                 for (String even : EventState.events[i]) {
@@ -344,39 +332,37 @@ public class Main extends Plugin {
         });
 
         handler.register("event", "<event>", "event_name", args -> {
-            if (args.length > 0) {
-                for (int i = 0; i < EventState.categ.length; i++) {
-                    String cate = EventState.categ[i];
-                    for (String even : EventState.events[i]) {
-                        Log.info(cate + "|" + even);
-                        if (even.equals(args[0])) {
-                            EventState.replace(cate, even, !EventState.get(cate, even));
-                            Call.sendMessage("[crimson]Server: " + bundle.get("commands.event.enable") + bundle.get("event." + cate + "." + even));
-                            Log.info("switched to: " + EventState.get(cate, even) + ": " + bundle.get("event." + cate + "." + even));
-                            return;
-                        }
+            for (int i = 0; i < EventState.categ.length; i++) {
+                String cate = EventState.categ[i];
+                for (String even : EventState.events[i]) {
+                    Log.info(cate + "|" + even);
+                    if (even.equals(args[0])) {
+                        EventState.replace(cate, even, !EventState.get(cate, even));
+                        Call.sendMessage("[scarlet][[Server]:[] " + bundle.get("commands.event.enable") + bundle.get("event." + cate + "." + even));
+                        Log.info("switched to: " + EventState.get(cate, even) + ": " + bundle.get("event." + cate + "." + even));
+                        return;
                     }
                 }
-                Log.info("can't find: " + args[0]);
             }
+            Log.info("can't find: " + args[0]);
         });
-        
+
         handler.register("tier", "add 1 to tier", args -> {
             Type.tier++;
             if (Type.tier > 4) Type.tier = 0;
-            Call.sendMessage("[red][SERVER] " + "change tier to"+ " : " + (Type.tier + 1));
+            Call.sendMessage("[scarlet][[Server]:[] change tier to: " + (Type.tier + 1));
             Log.info("current tier now: " + Type.tier);
         });
     }
 
     @Override
     public void loadContent() {
-        
+
     }
 
     public static void initGame() {
         for (Tile tile : Vars.world.tiles) /* place walls on floor */ {
-            if (tile.floor() == (Floor) Blocks.metalFloor5) {
+            if (tile.floor() == Blocks.metalFloor5) {
                 tile.setNet(Mathf.random(0, 100) > 30 ? Mathf.random(0, 100) > 30 ? Blocks.thoriumWall : Blocks.surgeWall : Blocks.plastaniumWall, Team.get(947), 0); // My love Number :�
             }
 
@@ -395,22 +381,22 @@ public class Main extends Plugin {
 
             // Lava Event
             if (EventState.get("floors" , "lava")) {
-                if (tile.block() == Blocks.air && tile.floor() != (Floor) Blocks.space && Mathf.random(100) > 98) {
+                if (tile.block() == Blocks.air && tile.floor() != Blocks.space && Mathf.random(100) > 98) {
                     for (Team team : Team.all) {
                         for (CoreBlock.CoreBuild core : team.cores()) {
                             if (Mathf.dst(core.getX(), core.getY(), tile.drawx(), tile.drawy()) > Vars.tilesize * 10) {
-                                tile.setFloorNet((Floor) Blocks.slag);
+                                tile.setFloorNet(Blocks.slag);
                             }
                         }
                     }
                 }
             }
         }
-        
+
         if (EventState.get("weather", "rain")) {
             Call.createWeather(Weathers.rain, Mathf.random(0.5f, 2f), 10000, 3, 3);
         }
-        
+
         if (EventState.get("weather", "snow")) {
             Call.createWeather(Weathers.snow, Mathf.random(0.2f, 1.4f), 10000, 3, 3);
         }
@@ -460,11 +446,5 @@ public class Main extends Plugin {
         UnitTypes.minke.abilities.clear();
         UnitTypes.oct.abilities.clear();
         rules.reactorExplosions = false;
-    }
-
-    public void debug() {
-        for (Room room : Lobby.rooms) /* Draw Debug Square With Bullets */ {
-            room.debugDraw();
-        }
     }
 }
